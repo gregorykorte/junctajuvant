@@ -1,1 +1,8 @@
 node_modules/
+
+# CF/Node local
+.wrangler/
+.dev.vars
+.env
+.env.local
+node_modules/
