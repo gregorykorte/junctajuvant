@@ -1,152 +1,183 @@
-// functions/api/cincy-scores.js
-//
-// Cincinnati “latest score” endpoint for Cloudflare Pages Functions.
-// - Default: checks Bengals, Reds, FC Cincinnati, Bearcats Football; returns the most recent event.
-// - Override with ?team=<TheSportsDB team id> (e.g., 134923 for Bengals).
-// - Add ?raw=1 to include the raw upstream event for debugging.
-// - Uses TheSportsDB “demo” key unless THE_SPORTS_DB_KEY / TSD_KEY is bound.
-//
-// Tip (local dev): if your corporate network MITMs TLS, local fetch() from the
-// runtime may fail. Deploy a Preview to test the function on Cloudflare’s edge.
+// Cloudflare Pages Function
+// Route: /api/cincy-scores
+// Usage: fetch('/api/cincy-scores') -> { label, date_local, games: [...] }
 
+export const onRequest = async (ctx) => {
+  try {
+    const API = "https://www.thesportsdb.com/api/v1/json/3";
+    const TZ = "America/New_York";
+
+    // ——— Teams to include (ID preferred; name fallback works too)
 const DEFAULT_TEAMS = [
-  { id: 134923, label: "Bengals" },           // NFL
-  { id: 135270, label: "Reds" },              // MLB
-  { id: 136688, label: "FC Cincinnati" },     // MLS
-  { id: 136877, label: "Bearcats Football" }, // NCAA FBS
+  { id: 134923, label: "Bengals" },                   // NFL
+  { id: 135270, label: "Reds" },                      // MLB
+  { id: 136688, label: "FC Cincinnati" },             // MLS
+  { id: 136877, label: "Bearcats Football" },         // NCAA FBS
+  { id: 138702, label: "Bearcats Basketball" },       // NCAA MBB
+  { id: 138662, label: "Musketeers Basketball" },     // NCAA MBB
 ];
 
-export async function onRequest(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const teamParam = url.searchParams.get("team");   // optional TheSportsDB team id
-  const includeRaw = url.searchParams.get("raw") === "1";
+    // Optional: allow ?team=134923 to filter to a single team id (useful for testing)
+    const url = new URL(ctx.request.url);
+    const onlyTeamId = url.searchParams.get("team");
+    const raw = url.searchParams.get("raw");
 
-  // Allow an env var to override the API key; fall back to demo key "3".
-  const apiKey = (env?.THE_SPORTS_DB_KEY || env?.TSD_KEY || "3").trim();
-  const API = `https://www.thesportsdb.com/api/v1/json/${apiKey}`;
+    const teams = onlyTeamId
+      ? DEFAULT_TEAMS.filter(t => String(t.id) === String(onlyTeamId))
+      : DEFAULT_TEAMS.slice();
 
-  try {
-    let events = [];
-
-    if (teamParam) {
-      // Single team
-      const ev = await fetchLastEvent(API, Number(teamParam));
-      if (ev) events.push(ev);
-    } else {
-      // All default Cincy teams in parallel
-      events = (await Promise.all(DEFAULT_TEAMS.map(t => fetchLastEvent(API, t.id)))).filter(Boolean);
-    }
-
-    if (!events.length) {
-      return json({}, 204, 60); // No Content
-    }
-
-    // Pick the newest by timestamp
-    events.sort((a, b) => b.ts - a.ts);
-    const top = events[0];
-
-    const payload = {
-      provider: "TheSportsDB (v1)",
-      league: top.league,
-      date_local: new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(top.ts)),
-      home: top.home,
-      away: top.away,
-      homeScore: top.homeScore,
-      awayScore: top.awayScore,
-      url: top.url,
+    // ——— Helpers
+    const fetchJSON = async (u) => {
+      const r = await fetch(u, { headers: { "User-Agent": "JunctaJuvant/1.0" }});
+      if (!r.ok) throw new Error(`HTTP ${r.status} for ${u}`);
+      return r.json();
     };
 
-    if (includeRaw) payload._raw = top._raw;
+    const toLocal = (d) => new Date(d.toLocaleString("en-US", { timeZone: TZ }));
+    const fmtDate = (d) => new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ, weekday: "short", month: "short", day: "numeric"
+    }).format(d);
+    const fmtTime = (d) => new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ, hour: "numeric", minute: "2-digit"
+    }).format(d);
+    const dateKey = (d) => {
+      const ld = toLocal(d);
+      const y = ld.getFullYear();
+      const m = String(ld.getMonth()+1).padStart(2,"0");
+      const day = String(ld.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    };
 
-    return json(payload, 200, 300); // cache 5 minutes, allow SWR below
-  } catch (e) {
-    return json({ error: e?.message || String(e) }, 500, 30);
+    const now = new Date();
+    const todayKey = dateKey(now);
+    const yestKey = dateKey(new Date(now.getTime() - 24*3600*1000));
+
+    const ensureTeamId = async (team) => {
+      if (team.id) return team.id;
+      if (!team.name) return null;
+      const data = await fetchJSON(`${API}/searchteams.php?t=${encodeURIComponent(team.name)}`);
+      const match = (data?.teams || []).find(t => t.strTeam?.toLowerCase() === team.name.toLowerCase()) || (data?.teams || [])[0];
+      team._resolvedTeam = match; // stash for label/league if needed
+      return match?.idTeam ? Number(match.idTeam) : null;
+    };
+
+    // Normalize one event from TheSportsDB into our shape
+    const normalize = (ev, teamLabel) => {
+      // Prefer UTC timestamp if present
+      let when = ev.strTimestamp ? new Date(ev.strTimestamp) : null;
+      if (!when && ev.dateEvent) {
+        // Fallback—treat given date/time as UTC if no timestamp (best effort)
+        const time = ev.strTime || "00:00:00";
+        when = new Date(`${ev.dateEvent}T${time}Z`);
+      }
+      // Finished?
+      const hasScores = ev.intHomeScore != null && ev.intAwayScore != null;
+      const status = ev.strStatus || (hasScores ? "Final" : (when && when < now ? "Final" : "Scheduled"));
+
+      // Competition/league name if available
+      const league = ev.strLeague || ev.strSport || "—";
+
+      return {
+        idEvent: ev.idEvent,
+        league,
+        date_local: when ? fmtDate(when) : (ev.dateEvent || "—"),
+        time_local: when ? fmtTime(when) : (ev.strTime || "—"),
+        dateKey: when ? dateKey(when) : (ev.dateEvent || "—"),
+        home: ev.strHomeTeam,
+        away: ev.strAwayTeam,
+        homeScore: hasScores ? Number(ev.intHomeScore) : null,
+        awayScore: hasScores ? Number(ev.intAwayScore) : null,
+        status,
+        provider: "TheSportsDB",
+        teamLabel
+      };
+    };
+
+    // Fetch events for a single team (recent + upcoming)
+    const getTeamEvents = async (team) => {
+      const id = await ensureTeamId(team);
+      if (!id) return [];
+      const [last, next] = await Promise.all([
+        fetchJSON(`${API}/eventslast.php?id=${id}`).catch(()=>({})),
+        fetchJSON(`${API}/eventsnext.php?id=${id}`).catch(()=>({}))
+      ]);
+      const all = []
+        .concat(last?.results || [])
+        .concat(next?.events || []);
+      return all.map(ev => normalize(ev, team.label || team.name || "Team"));
+    };
+
+    // ——— Aggregate all events
+    const allEventsNested = await Promise.all(teams.map(getTeamEvents));
+    const allEvents = allEventsNested.flat().filter(e => e.idEvent);
+
+    // Group by local date
+    const byDate = allEvents.reduce((acc, e) => {
+      if (!acc[e.dateKey]) acc[e.dateKey] = [];
+      acc[e.dateKey].push(e);
+      return acc;
+    }, {});
+
+    // Decide which bucket to show
+    let label = "Upcoming Games";
+    let targetKey = null;
+
+    if (byDate[todayKey]?.length) {
+      label = "Today's Scores";
+      targetKey = todayKey;
+    } else if (byDate[yestKey]?.length) {
+      label = "Yesterday's Scores";
+      targetKey = yestKey;
+    } else {
+      // find the earliest future date that has any events
+      const futureKeys = Object.keys(byDate).filter(k => k > todayKey).sort();
+      if (futureKeys.length) {
+        label = "Upcoming Games";
+        targetKey = futureKeys[0];
+      } else {
+        // fallback: latest past day if literally nothing upcoming
+        const pastKeys = Object.keys(byDate).filter(k => k <= yestKey).sort().reverse();
+        if (pastKeys.length) {
+          label = "Recent Scores";
+          targetKey = pastKeys[0];
+        }
+      }
+    }
+
+    const games = targetKey ? byDate[targetKey].sort((a,b)=>{
+      // sort by time within the day
+      if (a.time_local === "—" || b.time_local === "—") return 0;
+      return a.time_local.localeCompare(b.time_local);
+    }) : [];
+
+    const date_local = games[0]?.date_local || (targetKey ? targetKey : "—");
+
+    const payload = { label, date_local, games };
+
+    // For quick debugging
+    if (raw) {
+      return json(payload);
+    }
+
+    // Minimal, backward-compatible single-line summary if you still render a single game:
+    // (Recommend updating frontend to render all games; see snippet below.)
+    return json(payload);
+
+  } catch (err) {
+    return json({ error: String(err) }, 500, {
+      "Cache-Control": "s-maxage=30, stale-while-revalidate=120",
+      "Access-Control-Allow-Origin": "*"
+    });
   }
-}
+};
 
-/** Fetch and normalize the most recent event for a team id. */
-async function fetchLastEvent(API, teamId) {
-  if (!Number.isFinite(teamId)) return null;
-
-  // Upstream sometimes returns { events: [...] } or { results: [...] }
-  const r = await fetch(`${API}/eventslast.php?id=${teamId}`, {
-    headers: {
-      "User-Agent": "junctajuvant.com (Cloudflare Pages Function)",
-      "Accept": "application/json",
-    },
-  });
-
-  // Surface upstream failures cleanly
-  if (!r.ok) {
-    throw new Error(`Upstream ${r.status} from TheSportsDB for team ${teamId}`);
-  }
-
-  // Some upstreams return text/html on error; guard the JSON parse.
-  const text = await r.text();
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error(`Non-JSON response from TheSportsDB for team ${teamId}`);
-  }
-
-  const arr = Array.isArray(data?.results)
-    ? data.results
-    : Array.isArray(data?.events)
-      ? data.events
-      : [];
-
-  const ev = arr[0];
-  if (!ev) return null;
-
-  const ts = normalizeTs(ev); // robust timestamp extraction
-  return {
-    ts,
-    league: ev.strLeague || "",
-    home: ev.strHomeTeam || "",
-    away: ev.strAwayTeam || "",
-    homeScore: toInt(ev.intHomeScore),
-    awayScore: toInt(ev.intAwayScore),
-    url: ev.strPostponed === "yes" ? "" : (ev.strVideo || ""),
-    _raw: ev,
-  };
-}
-
-/** Convert various date/time fields from TheSportsDB to a usable epoch ms. */
-function normalizeTs(ev) {
-  // Best case: strTimestamp is an ISO-ish string
-  if (ev?.strTimestamp) {
-    const t0 = Date.parse(ev.strTimestamp);
-    if (!Number.isNaN(t0)) return t0;
-  }
-  // Next: separate local date/time fields
-  const d = ev?.dateEventLocal || ev?.dateEvent || "";
-  const t = ev?.strTimeLocal || ev?.strTime || "00:00:00";
-  const guess = Date.parse(`${d}T${t}`);
-  if (!Number.isNaN(guess)) return guess;
-
-  // Fallback: just the date at midnight UTC
-  const fallback = Date.parse(`${ev?.dateEvent || ""}T00:00:00Z`);
-  return Number.isNaN(fallback) ? Date.now() : fallback;
-}
-
-function toInt(v) {
-  const n = parseInt(v, 10);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function json(obj, status = 200, sMaxAge = 300) {
-  return new Response(status === 204 ? null : JSON.stringify(obj), {
+// ——— Small helper for JSON responses
+const json = (data, status = 200, extraHeaders = {}) =>
+  new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": `s-maxage=${sMaxAge}, stale-while-revalidate=120`,
-    },
+      ...extraHeaders
+    }
   });
-}

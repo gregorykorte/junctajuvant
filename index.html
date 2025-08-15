@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script defer data-domain="junctajuvant.com" src="https://stats.4gk.us/js/script.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Juncta Juvant — Cincinnati</title>
@@ -305,26 +306,43 @@
     loadNews();
 
     // ——— Scores: hit your Pages Function at /api/cincy-scores (see function code in repo)
-    async function loadScores(){
-      try{
-        const res = await fetch('/api/cincy-scores');
-        if(!res.ok) throw new Error('No endpoint');
-        const game = await res.json();
-        const el = document.getElementById('sports-content');
-        el.innerHTML = '';
-        if(!game || !game.league){ el.innerHTML = '<div class="muted">No recent results found.</div>'; return; }
-        const wrap = document.createElement('div');
-        wrap.innerHTML = `
-          <div style="font-weight:600">${game.league} — ${game.date_local}</div>
-          <div style="margin:.25rem 0 .5rem">${game.home} ${game.homeScore} · ${game.away} ${game.awayScore}</div>
-          <div class="muted" style="font-size:.9rem">via ${game.provider}</div>
-        `;
-        document.getElementById('sports-content').append(wrap);
-      }catch(err){
-        document.getElementById('sports-content').innerHTML = '<div class="muted">(Tip: enable the /api/cincy-scores function to auto-fill the latest Bengals/Reds/FC Cincinnati/Bearcats result.)</div>';
-      }
+<script>
+async function loadScores(){
+  try{
+    const res = await fetch('/api/cincy-scores');
+    if(!res.ok) throw new Error('No endpoint');
+    const data = await res.json();
+
+    const el = document.getElementById('sports-content');
+    el.innerHTML = '';
+
+    const h = document.createElement('div');
+    h.style.fontWeight = '700';
+    h.textContent = `${data.label} — ${data.date_local}`;
+    el.appendChild(h);
+
+    if(!data.games?.length){
+      el.insertAdjacentHTML('beforeend', '<div class="muted">No games found.</div>');
+      return;
     }
-    loadScores();
-  </script>
+
+    data.games.forEach(g=>{
+      const row = document.createElement('div');
+      row.style.margin = '.5rem 0 .65rem';
+      row.innerHTML = `
+        <div style="font-size:.95rem; color:#6a645b; margin-bottom:.15rem">${g.league} · ${g.time_local}</div>
+        <div>${g.home} ${g.homeScore ?? '—'} · ${g.away} ${g.awayScore ?? '—'}</div>
+        <div class="muted" style="font-size:.85rem">via ${g.provider}</div>
+      `;
+      el.appendChild(row);
+    });
+  }catch(err){
+    document.getElementById('sports-content').innerHTML =
+      '<div class="muted">Scores unavailable.</div>';
+    console.error(err);
+  }
+}
+loadScores();
+</script>
 </body>
 </html>
