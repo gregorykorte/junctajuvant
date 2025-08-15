@@ -45,10 +45,20 @@
     }
     .rule{ height:1px; background:var(--rule); margin:1rem 0 1.25rem; }
 
-    /* Hero photo placeholder */
-    .hero{ position:relative; width:100%; aspect-ratio: 3 / 1; background:#e9e4dd; border:1px solid var(--rule); display:grid; place-items:center; }
-    .hero span{ color:#8a8074; font-size: .95rem; letter-spacing:.02em;}
-    .hero img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* Keep the image inside the hero box and center its focal point */
+.hero{
+  overflow: hidden;              /* prevents any spill into adjacent columns */
+}
+
+.hero img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  /* add this back so the CSS variables take effect */
+  object-position: var(--hero-x, 0%) var(--hero-y, 50%);
+}
+
 
     /* Layout: newspaper-ish grid */
     .grid{ display:grid; grid-template-columns: 2fr 1fr; gap:1.25rem; }
@@ -74,53 +84,114 @@
     .wx{ font-size:.95rem; }
     .wx small{ color:#7a7266; }
 
+    /* --- 3‑column layout --- */
+.layout{
+  display:grid;
+  gap:1.25rem;
+  /* Unequal widths: News (1.6), Hero (2.2), Right Rail (1) */
+  grid-template-columns: 1.6fr 2.2fr 1fr;
+  grid-template-areas: "news hero rail";
+  align-items:start;
+}
+.news{ grid-area: news; }
+.hero{ grid-area: hero; }
+.rail{ grid-area: rail; display:flex; flex-direction:column; gap:1.25rem; }
+
+/* --- Responsive breakpoints --- */
+
+/* Tablet: switch to 2 columns. Put hero full‑width on top row. */
+@media (max-width: 1000px){
+  .layout{
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "hero hero"
+      "news rail";
+  }
+}
+
+/* Mobile: single column stack. Order = Hero, News, Rail. */
+@media (max-width: 640px){
+  .layout{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "hero"
+      "news"
+      "rail";
+  }
+  .rail{ gap:1rem; }
+}
+
+
     /* Footer */
     footer{ margin:2rem 0 1rem; text-align:center; color:#8a8074; font-size:.85rem; }
   </style>
 </head>
 <body>
   <div class="container">
-    <header class="masthead">
-      <div class="nameplate">Juncta Juvant</div>
-      <div class="tagline">Joined in Purpose — The Queen City's Public Ledger</div>
-      <div id="dateline" class="dateline">Cincinnati, Ohio — </div>
-      <div class="rule"></div>
-    </header>
+<header class="masthead" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; text-align:center;">
+  <!-- Left: Cincinnati flag -->
+  <div style="flex:0 0 auto;">
+    <img src="flag.png" alt="Flag of Cincinnati" style="height:150px; width:auto; display:block;"/>
+  </div>
 
-    <figure class="hero" aria-label="Feature photo">
-      <!-- Replace the placeholder span with an <img src="/path/to/city-hall-or-roebling.jpg" alt="City Hall / Roebling Bridge" /> when ready. -->
-      <span>Place a wide photo of City Hall or the Roebling Bridge here (3:1)</span>
-    </figure>
+  <!-- Center: Title -->
+  <div style="flex:1 1 auto;">
+    <div class="nameplate">Juncta Juvant</div>
+    <div class="tagline">A Chronicle of the Queen City</div>
+    <div id="dateline" class="dateline">Cincinnati, Ohio — </div>
+  </div>
 
-    <main class="grid" aria-live="polite">
-      <section class="box" id="news-box">
-        <h2>Latest Cincinnati News</h2>
-        <div class="content">
-          <ul class="news-list" id="news-list">
-            <li class="muted">Loading headlines…</li>
-          </ul>
+  <!-- Right: Quotation -->
+  <div style="flex:0 0 auto; font-style:italic; max-width:240px; text-align:left; font-size:0.85rem; line-height:1.3;">
+    And this Song of the Vine,<br>
+    This greeting of mine,<br>
+    The winds and the birds shall deliver<br>
+    To the Queen of the West,<br>
+    In her garlands dressed,<br>
+    On the banks of the Beautiful River
+  </div>
+</header>
+<div class="rule"></div>
+
+<main class="layout" aria-live="polite">
+  <!-- Left: News -->
+  <section class="box news" id="news-box">
+    <h2>Latest Cincinnati News</h2>
+    <div class="content">
+      <ul class="news-list" id="news-list">
+        <li class="muted">Loading headlines…</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Middle: Hero -->
+
+<figure class="box hero" style="--hero-x: 0%; --hero-y: -20%;" aria-label="Feature photo">
+  <img src="roebling.jpg" alt="Roebling Bridge at sunset" />
+</figure>
+
+  <!-- Right: Weather + Sports -->
+  <aside class="rail">
+    <section class="box" id="weather-box" aria-live="polite">
+      <h2>Weather — Cincinnati</h2>
+      <div class="content">
+        <div class="stat-line">
+          <div class="temp" id="temp">—</div>
+          <div class="wx" id="wx-desc">
+            Fetching current conditions…<br><small id="wx-extra"></small>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <aside class="stack">
-        <section class="box" id="weather-box" aria-live="polite">
-          <h2>Weather — Cincinnati</h2>
-          <div class="content">
-            <div class="stat-line">
-              <div class="temp" id="temp">—</div>
-              <div class="wx" id="wx-desc">Fetching current conditions…<br><small id="wx-extra"></small></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="box" id="sports-box">
-          <h2>Most Recent Cincinnati Score</h2>
-          <div class="content" id="sports-content">
-            <div class="muted">Connecting to scores…</div>
-          </div>
-        </section>
-      </aside>
-    </main>
+    <section class="box" id="sports-box">
+      <h2>Most Recent Cincinnati Score</h2>
+      <div class="content" id="sports-content">
+        <div class="muted">Connecting to scores…</div>
+      </div>
+    </section>
+  </aside>
+</main>
 
     <footer>
       <div class="rule" style="margin-top:1.25rem"></div>
@@ -186,7 +257,7 @@
 
     // ——— Cincinnati news via RSS (proxied through Cloudflare Pages Function at /api/rss-proxy)
     const FEEDS = [
-      'https://www.wcpo.com/about-us/rss',
+      'https://www.wcpo.com/news.rss',
       'https://www.cincinnatamagazine.com/category/news/feed/',
       'https://thecincinnatiherald.com/feed/',
       'https://www.wvxu.org/podcast/cincinnati-edition/rss.xml'
