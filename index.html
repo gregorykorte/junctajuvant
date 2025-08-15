@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Juncta Juvant — Cincinnati</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#111;
+      --ink-lite:#333;
+      --paper:#f7f5f2; /* slight newsprint tint */
+      --rule:#d8d1c7;
+      --accent:#7a5e3a; /* sepia accent */
+      --maxw:1100px;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0; background:var(--paper); color:var(--ink);
+      font-family:"Source Serif 4", Georgia, serif;
+      line-height:1.5; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    .container{max-width:var(--maxw); margin:0 auto; padding:1.25rem;}
+    /* Masthead */
+    .masthead{ text-align:center; }
+    .nameplate{ 
+      font-family:"Newsreader", Georgia, serif; 
+      font-weight:700; 
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      letter-spacing: 0.02em; 
+      line-height:1;
+    }
+    .tagline{ 
+      margin-top:.35rem; 
+      font-size: clamp(.9rem, 1.8vw, 1.05rem); 
+      color:var(--ink-lite);
+      letter-spacing:.02em;
+    }
+    .dateline{ 
+      margin-top:.35rem; 
+      font-variant: small-caps;
+      letter-spacing:.08em; color:var(--ink-lite);
+    }
+    .rule{ height:1px; background:var(--rule); margin:1rem 0 1.25rem; }
+
+    /* Hero photo placeholder */
+    .hero{ position:relative; width:100%; aspect-ratio: 3 / 1; background:#e9e4dd; border:1px solid var(--rule); display:grid; place-items:center; }
+    .hero span{ color:#8a8074; font-size: .95rem; letter-spacing:.02em;}
+    .hero img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* Layout: newspaper-ish grid */
+    .grid{ display:grid; grid-template-columns: 2fr 1fr; gap:1.25rem; }
+    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+
+    /* Cards / boxes */
+    .box{ background:#fff; border:1px solid var(--rule); box-shadow:0 1px 0 rgba(0,0,0,.02); }
+    .box h2{ margin:0; padding:.6rem .8rem; font-family:"Newsreader", Georgia, serif; font-weight:700; font-size:1.1rem; border-bottom:1px solid var(--rule); }
+    .box .content{ padding:.8rem; }
+    .muted{ color:#6a645b; }
+
+    /* News list */
+    .news-list{ list-style:none; margin:0; padding:0; }
+    .news-list li{ padding:.6rem 0; border-bottom:1px dotted var(--rule); }
+    .news-list li:last-child{ border-bottom:none; }
+    .news-list a{ color:inherit; text-decoration:none; }
+    .news-list a:hover{ text-decoration:underline; }
+    .source{ color:#8c857a; font-size:.85rem; }
+
+    /* Weather & sports small layout */
+    .stat-line{ display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
+    .temp{ font-family:"Newsreader", Georgia, serif; font-weight:700; font-size:2rem; }
+    .wx{ font-size:.95rem; }
+    .wx small{ color:#7a7266; }
+
+    /* Footer */
+    footer{ margin:2rem 0 1rem; text-align:center; color:#8a8074; font-size:.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="masthead">
+      <div class="nameplate">Juncta Juvant</div>
+      <div class="tagline">Joined in Purpose — The Queen City's Public Ledger</div>
+      <div id="dateline" class="dateline">Cincinnati, Ohio — </div>
+      <div class="rule"></div>
+    </header>
+
+    <figure class="hero" aria-label="Feature photo">
+      <!-- Replace the placeholder span with an <img src="/path/to/city-hall-or-roebling.jpg" alt="City Hall / Roebling Bridge" /> when ready. -->
+      <span>Place a wide photo of City Hall or the Roebling Bridge here (3:1)</span>
+    </figure>
+
+    <main class="grid" aria-live="polite">
+      <section class="box" id="news-box">
+        <h2>Latest Cincinnati News</h2>
+        <div class="content">
+          <ul class="news-list" id="news-list">
+            <li class="muted">Loading headlines…</li>
+          </ul>
+        </div>
+      </section>
+
+      <aside class="stack">
+        <section class="box" id="weather-box" aria-live="polite">
+          <h2>Weather — Cincinnati</h2>
+          <div class="content">
+            <div class="stat-line">
+              <div class="temp" id="temp">—</div>
+              <div class="wx" id="wx-desc">Fetching current conditions…<br><small id="wx-extra"></small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="box" id="sports-box">
+          <h2>Most Recent Cincinnati Score</h2>
+          <div class="content" id="sports-content">
+            <div class="muted">Connecting to scores…</div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer>
+      <div class="rule" style="margin-top:1.25rem"></div>
+      <div>© <span id="year"></span> junctajuvant.com</div>
+    </footer>
+  </div>
+
+  <script>
+    // ——— Dateline in Eastern Time (America/New_York)
+    function renderDate() {
+      const now = new Date();
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+      });
+      document.getElementById('dateline').textContent = `Cincinnati, Ohio — ${fmt.format(now)}`;
+      document.getElementById('year').textContent = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric' }).format(now);
+    }
+    renderDate();
+    // Update just after midnight ET
+    setInterval(renderDate, 60 * 60 * 1000);
+
+    // ——— Weather via Open‑Meteo (no key)
+    async function loadWeather(){
+      try{
+        const lat = 39.103119, lon = -84.512016; // Cincinnati
+        const url = new URL('https://api.open-meteo.com/v1/forecast');
+        url.search = new URLSearchParams({
+          latitude: lat, longitude: lon,
+          current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m',
+          temperature_unit: 'fahrenheit', windspeed_unit:'mph', timezone: 'America/New_York'
+        }).toString();
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Weather unavailable');
+        const data = await res.json();
+        const c = data.current || {};
+        const code = c.weather_code;
+        const temp = Math.round(c.temperature_2m);
+        const feels = Math.round(c.apparent_temperature);
+        const wind = Math.round(c.wind_speed_10m);
+        const desc = weatherCodeToText(code);
+        document.getElementById('temp').textContent = `${temp}°F`;
+        document.getElementById('wx-desc').innerHTML = `${desc}<br><small id="wx-extra"></small>`;
+        document.getElementById('wx-extra').textContent = `Feels like ${feels}°F · Wind ${wind} mph`;
+      }catch(err){
+        document.getElementById('wx-desc').textContent = 'Weather data unavailable.';
+        console.error(err);
+      }
+    }
+
+    function weatherCodeToText(code){
+      const map = {
+        0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
+        45:'Fog',48:'Rime fog', 51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+        56:'Light freezing drizzle',57:'Freezing drizzle', 61:'Light rain',63:'Rain',65:'Heavy rain',
+        66:'Light freezing rain',67:'Freezing rain', 71:'Light snow',73:'Snow',75:'Heavy snow',
+        77:'Snow grains',80:'Rain showers',81:'Rain showers',82:'Violent rain showers',
+        85:'Snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm w/ hail',99:'Thunderstorm w/ hail'
+      };
+      return map[code] || '—';
+    }
+
+    loadWeather();
+
+    // ——— Cincinnati news via RSS (proxied through Cloudflare Pages Function at /api/rss-proxy)
+    const FEEDS = [
+      'https://www.wcpo.com/about-us/rss',
+      'https://www.cincinnatamagazine.com/category/news/feed/',
+      'https://thecincinnatiherald.com/feed/',
+      'https://www.wvxu.org/podcast/cincinnati-edition/rss.xml'
+    ];
+
+    async function loadNews(){
+      const items = [];
+      await Promise.all(FEEDS.map(async (u)=>{
+        try{
+          const res = await fetch(`/api/rss-proxy?url=${encodeURIComponent(u)}`);
+          if(!res.ok) return; const xml = await res.text();
+          const doc = new DOMParser().parseFromString(xml, 'text/xml');
+          const channelTitle = doc.querySelector('channel>title')?.textContent || new URL(u).hostname;
+          doc.querySelectorAll('item').forEach(it=>{
+            const title = it.querySelector('title')?.textContent?.trim();
+            const link = it.querySelector('link')?.textContent?.trim();
+            const pubDate = new Date(it.querySelector('pubDate')?.textContent || it.querySelector('updated')?.textContent || Date.now());
+            if(title && link) items.push({title, link, pubDate, source: channelTitle});
+          });
+        }catch(e){ console.warn('Feed failed', u, e); }
+      }));
+      items.sort((a,b)=> b.pubDate - a.pubDate);
+      renderNews(items.slice(0, 12));
+    }
+
+    function renderNews(items){
+      const list = document.getElementById('news-list');
+      list.innerHTML = '';
+      if(!items.length){ list.innerHTML = '<li class="muted">No recent items available.</li>'; return; }
+      const rtf = new Intl.RelativeTimeFormat('en', {numeric:'auto'});
+      items.forEach(({title, link, pubDate, source})=>{
+        const li = document.createElement('li');
+        const a = document.createElement('a'); a.href = link; a.target = '_blank'; a.rel='noopener'; a.textContent = title;
+        const small = document.createElement('div'); small.className='source';
+        const diffMs = Date.now() - pubDate.getTime();
+        const diffHrs = Math.round(diffMs/36e5);
+        const rel = diffHrs < 24 ? rtf.format(-diffHrs, 'hour') : rtf.format(-Math.round(diffHrs/24), 'day');
+        small.textContent = `${source} · ${rel}`;
+        li.append(a, small);
+        list.append(li);
+      });
+    }
+
+    loadNews();
+
+    // ——— Scores: hit your Pages Function at /api/cincy-scores (see function code in repo)
+    async function loadScores(){
+      try{
+        const res = await fetch('/api/cincy-scores');
+        if(!res.ok) throw new Error('No endpoint');
+        const game = await res.json();
+        const el = document.getElementById('sports-content');
+        el.innerHTML = '';
+        if(!game || !game.league){ el.innerHTML = '<div class="muted">No recent results found.</div>'; return; }
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `
+          <div style="font-weight:600">${game.league} — ${game.date_local}</div>
+          <div style="margin:.25rem 0 .5rem">${game.home} ${game.homeScore} · ${game.away} ${game.awayScore}</div>
+          <div class="muted" style="font-size:.9rem">via ${game.provider}</div>
+        `;
+        document.getElementById('sports-content').append(wrap);
+      }catch(err){
+        document.getElementById('sports-content').innerHTML = '<div class="muted">(Tip: enable the /api/cincy-scores function to auto-fill the latest Bengals/Reds/FC Cincinnati/Bearcats result.)</div>';
+      }
+    }
+    loadScores();
+  </script>
+</body>
+</html>
