@@ -56,7 +56,7 @@
   display:block;
   object-fit:cover;
   /* add this back so the CSS variables take effect */
-  object-position: var(--hero-x, 0%) var(--hero-y, 50%);
+  object-position: var(--hero-x, 50%) var(--hero-y, 50%);
 }
 
 
@@ -185,7 +185,7 @@
     </section>
 
     <section class="box" id="sports-box">
-      <h2>Most Recent Cincinnati Score</h2>
+      <h2>Sports Score</h2>
       <div class="content" id="sports-content">
         <div class="muted">Connecting to scores…</div>
       </div>
@@ -196,6 +196,7 @@
     <footer>
       <div class="rule" style="margin-top:1.25rem"></div>
       <div>© <span id="year"></span> junctajuvant.com</div>
+      <div>© This site is currently for non-commercial, demonstration purposes only.</div>
     </footer>
   </div>
 
@@ -257,7 +258,7 @@
 
     // ——— Cincinnati news via RSS (proxied through Cloudflare Pages Function at /api/rss-proxy)
     const FEEDS = [
-      'https://www.wcpo.com/news.rss',
+      'https://www.wcpo.com/news/local-news.rss',
       'https://www.cincinnatamagazine.com/category/news/feed/',
       'https://thecincinnatiherald.com/feed/',
       'https://www.wvxu.org/podcast/cincinnati-edition/rss.xml'
@@ -280,7 +281,7 @@
         }catch(e){ console.warn('Feed failed', u, e); }
       }));
       items.sort((a,b)=> b.pubDate - a.pubDate);
-      renderNews(items.slice(0, 12));
+      renderNews(items.slice(0, 6));
     }
 
     function renderNews(items){
