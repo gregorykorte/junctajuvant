@@ -85,7 +85,7 @@
     .wx{ font-size:.95rem; }
     .wx small{ color:#7a7266; }
 
-    /* --- 3‑column layout --- */
+    /* --- 3-column layout --- */
 .layout{
   display:grid;
   gap:1.25rem;
@@ -286,7 +286,7 @@
     // Update just after midnight ET
     setInterval(renderDate, 60 * 60 * 1000);
 
-    // ——— Weather via Open‑Meteo (no key)
+    // ——— Weather via Open-Meteo (no key)
     async function loadWeather(){
       try{
         const lat = 39.103119, lon = -84.512016; // Cincinnati
@@ -336,9 +336,39 @@ const FEEDS = [
   { url: 'https://www.wvxu.org/podcast/cincinnati-edition/rss.xml',                      label: 'WVXU' },
   { url: 'https://www.citybeat.com/cincinnati/Rss.xml?section=11962257',                 label: 'CityBeat' },
   { url: 'https://www.wlwt.com/topstories-rss',                                          label: 'WLWT' },
-  { url: 'https://rss.bizjournals.com/feed/cdfd3a38bf00fe702915839e402f927be4566046/13253?market=cincinnati', label: 'Cincinnati Business Courier' }
+  { url: 'https://rss.bizjournals.com/feed/cdfd3a38bf00fe702915839e402f927be4566046/13253?market=cincinnati', label: 'Cincinnati Business Courier' },
+  { url: 'https://signalcincinnati.org/feed/',                                           label: 'Signal Cincinnati' },
+  { url: 'https://feeds.feedburner.com/soapboxmedia',                                     label: 'Soapbox Cincinnati' },
+  { url: 'https://www.thecatholictelegraph.com/feed',                                     label: 'Catholic Telegraph' }
 ];
 
+// Renders the list into #news-list
+function renderNews(items){
+  const ul = document.getElementById('news-list');
+  ul.innerHTML = '';
+
+  if (!items.length){
+    ul.innerHTML = '<li class="muted">No headlines found right now.</li>';
+    return;
+  }
+
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York'
+  });
+
+  items.forEach(({title, link, pubDate, source})=>{
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <a href="${link}" target="_blank" rel="noopener">
+        ${title}
+      </a><br>
+      <span class="source">${source} · ${fmt.format(pubDate)}</span>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+// Robust loader: supports RSS <item> and Atom <entry>
 async function loadNews(){
   const items = [];
 
@@ -350,14 +380,30 @@ async function loadNews(){
       const xml = await res.text();
       const doc = new DOMParser().parseFromString(xml, 'text/xml');
 
-      // Fallback to channel title ONLY if we didn't supply a label
-      const sourceLabel = label || doc.querySelector('channel>title')?.textContent || new URL(url).hostname;
+      // Prefer explicit label (TV call letters, etc.); else channel/feed title; else hostname
+      const fallbackTitle =
+        doc.querySelector('channel > title')?.textContent?.trim() ||
+        doc.querySelector('feed > title')?.textContent?.trim() ||
+        new URL(url).hostname;
+      const sourceLabel = label || fallbackTitle;
 
-      doc.querySelectorAll('item').forEach(it=>{
-        const title   = it.querySelector('title')?.textContent?.trim();
-        const link    = it.querySelector('link')?.textContent?.trim();
-        const whenStr = it.querySelector('pubDate')?.textContent || it.querySelector('updated')?.textContent;
-        const pubDate = whenStr ? new Date(whenStr) : new Date();
+      // RSS items and Atom entries
+      doc.querySelectorAll('item, entry').forEach(it=>{
+        const title = it.querySelector('title')?.textContent?.trim();
+
+        // Link can be textContent (<link>http…</link>) or href attr (<link href="…"/>)
+        const linkEl = it.querySelector('link');
+        const link = linkEl?.getAttribute?.('href') || linkEl?.textContent?.trim() || '';
+
+        // Dates: RSS(pubDate) | Atom(updated|published)
+        const whenStr =
+          it.querySelector('pubDate')?.textContent ||
+          it.querySelector('updated')?.textContent ||
+          it.querySelector('published')?.textContent ||
+          '';
+
+        const d = whenStr ? new Date(whenStr) : new Date();
+        const pubDate = isNaN(d.getTime()) ? new Date() : d;
 
         if(title && link){
           items.push({ title, link, pubDate, source: sourceLabel });
@@ -368,6 +414,7 @@ async function loadNews(){
     }
   }));
 
+  // Sort newest first; show top 6
   items.sort((a,b)=> b.pubDate - a.pubDate);
   renderNews(items.slice(0, 6));
 }
