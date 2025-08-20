@@ -106,3 +106,245 @@
     .weather{ display:flex; gap:1rem; align-items:flex-start; }
     .weather .temp{ font-size:2rem; font-weight:700; }
     .weather .desc{ margin-top:.15rem; }
+
+    /* Scores */
+    .scores .row{ margin:.5rem 0 .65rem; }
+    .scores .league{ font-size:.95rem; color:#6a645b; margin-bottom:.15rem; }
+
+    footer{ margin:2.5rem 0 1rem; color:#6a645b; font-size:.95rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="nameplate">Juncta Juvant</div>
+      <div class="dek">Cincinnati News</div>
+      <div id="dateline" class="dateline">Cincinnati, Ohio — </div>
+      <div class="rule"></div>
+    </header>
+
+    <main>
+      <section class="section">
+        <h2>Top Stories</h2>
+        <div class="hero">
+          <img src="https://www.junctajuvant.com/content/images/size/w1600/2025/06/dugout-hero.jpg" alt="Cincinnati skyline at dusk">
+          <div class="muted">Local reporting and curated headlines from across the region.</div>
+        </div>
+      </section>
+
+      <aside class="section">
+        <h2>Weather</h2>
+        <div class="weather">
+          <div class="temp" id="temp">—</div>
+          <div class="desc" id="wx-desc">Loading…</div>
+        </div>
+      </aside>
+
+      <section class="section" style="grid-column: 1 / -1;">
+        <h2>Latest Headlines</h2>
+        <ul id="news-list"></ul>
+      </section>
+
+      <section class="section" style="grid-column: 1 / -1;">
+        <h2>Scores</h2>
+        <div id="sports-content" class="scores"></div>
+      </section>
+    </main>
+
+    <footer>
+      © <span id="year"></span> Juncta Juvant. All rights reserved.
+    </footer>
+  </div>
+
+  <script>
+    // ——— Dateline in Eastern Time (America/New_York)
+    function renderDate() {
+      const now = new Date();
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+      });
+      document.getElementById('dateline').textContent = `Cincinnati, Ohio — ${fmt.format(now)}`;
+      document.getElementById('year').textContent =
+        new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric' }).format(now);
+    }
+    renderDate();
+    setInterval(renderDate, 60 * 60 * 1000);
+
+    // ——— Weather via Open-Meteo (no key)
+    async function loadWeather(){
+      try{
+        const lat = 39.103119, lon = -84.512016;
+        const url = new URL('https://api.open-meteo.com/v1/forecast');
+        url.search = new URLSearchParams({
+          latitude: lat, longitude: lon,
+          current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m',
+          temperature_unit: 'fahrenheit', windspeed_unit:'mph', timezone: 'America/New_York'
+        }).toString();
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Weather unavailable');
+        const data = await res.json();
+        const c = data.current || {};
+        const code = c.weather_code;
+        const temp = Math.round(c.temperature_2m);
+        const feels = Math.round(c.apparent_temperature);
+        const wind = Math.round(c.wind_speed_10m);
+        const desc = weatherCodeToText(code);
+        document.getElementById('temp').textContent = `${temp}°F`;
+        document.getElementById('wx-desc').innerHTML = `${desc}<br><small id="wx-extra"></small>`;
+        document.getElementById('wx-extra').textContent = `Feels like ${feels}°F · Wind ${wind} mph`;
+      }catch(err){
+        document.getElementById('wx-desc').textContent = 'Weather data unavailable.';
+        console.error(err);
+      }
+    }
+    function weatherCodeToText(code){
+      const map = {
+        0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Rime fog',
+        51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',56:'Light freezing drizzle',57:'Freezing drizzle',
+        61:'Light rain',63:'Rain',65:'Heavy rain',66:'Light freezing rain',67:'Freezing rain',
+        71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Rain showers',81:'Rain showers',
+        82:'Violent rain showers',85:'Snow showers',86:'Heavy snow showers',95:'Thunderstorm',
+        96:'Thunderstorm w/ hail',99:'Thunderstorm w/ hail'
+      };
+      return map[code] || '—';
+    }
+    loadWeather();
+
+    // ——— Cincinnati news via RSS (proxied at /api/rss-proxy)
+    const FEEDS = [
+      { url: 'https://www.wcpo.com/news/local-news/hamilton-county/cincinnati.rss', label: 'WCPO' },
+      { url: 'https://www.cincinnatimagazine.com/category/news/feed/', label: 'Cincinnati Magazine' },
+      { url: 'https://thecincinnatiherald.com/feed/', label: 'The Cincinnati Herald' },
+      { url: 'https://www.wvxu.org/politics.rss', label: 'WVXU' },
+      { url: 'https://www.citybeat.com/cincinnati/Rss.xml?section=11962257', label: 'CityBeat' },
+      { url: 'https://www.wlwt.com/local-news-rss', label: 'WLWT' },
+      { url: 'https://rss.bizjournals.com/feed/cdfd3a38bf00fe702915839e402f927be4566046/13253?market=cincinnati', label: 'Cincinnati Business Courier' },
+      { url: 'https://signalcincinnati.org/feed/', label: 'Signal Cincinnati' },
+      { url: 'https://feeds.feedburner.com/soapboxmedia', label: 'Soapbox Cincinnati' },
+      { url: 'https://www.thecatholictelegraph.com/category/local-news/feed', label: 'Catholic Telegraph' },
+      { url: 'https://www.newsrecord.org/search/?a=64128ff4-dd69-11ee-b9cb-bbbdd76e4cd4&s=start_time&sd=desc&f=rss', label: 'The News Record' },
+      { url: 'https://americanisraelite.com/category/local/feed/', label: 'American Israelite' }
+    ];
+
+    async function loadNews(){
+      const ul = document.getElementById('news-list');
+      ul.innerHTML = '<li class="muted">Loading headlines…</li>';
+
+      const items = [];
+      await Promise.all(FEEDS.map(async ({url, label})=>{
+        try{
+          const res = await fetch(`/api/rss-proxy?url=${encodeURIComponent(url)}`);
+          if(!res.ok) return;
+
+          const xml = await res.text();
+          const doc = new DOMParser().parseFromString(xml, 'text/xml');
+
+          // Prefer explicit label (TV call letters, etc.); else channel/feed title; else hostname
+          const fallbackTitle =
+            doc.querySelector('channel > title')?.textContent?.trim() ||
+            doc.querySelector('feed > title')?.textContent?.trim() ||
+            new URL(url).hostname;
+          const sourceLabel = label || fallbackTitle;
+
+          // RSS items and Atom entries
+          doc.querySelectorAll('item, entry').forEach(it=>{
+            // Title
+            const title = it.querySelector('title')?.textContent?.trim();
+
+            // Link
+            const linkEl = it.querySelector('link');
+            const link = linkEl?.getAttribute?.('href') || linkEl?.textContent?.trim() || '';
+
+            // Pub date
+            const whenStr =
+              it.querySelector('pubDate')?.textContent ||
+              it.querySelector('updated')?.textContent ||
+              it.querySelector('published')?.textContent || '';
+            const d = whenStr ? new Date(whenStr) : new Date();
+            const pubDate = isNaN(d.getTime()) ? new Date() : d;
+
+            // Byline (if present)
+            const byline =
+              it.querySelector('dc\\:creator')?.textContent?.trim() ||
+              it.querySelector('author > name')?.textContent?.trim() ||
+              it.querySelector('author')?.textContent?.trim() ||
+              it.querySelector('media\\:credit')?.textContent?.trim() || '';
+
+            if (title && link) items.push({ title, link, pubDate, source: sourceLabel, byline });
+          });
+        }catch(e){ /* ignore this feed */ }
+      }));
+
+      if (!items.length){
+        ul.innerHTML = '<li class="muted">No headlines found.</li>';
+        return;
+      }
+
+      // Dedupe + sort
+      const seen = new Set();
+      const unique = items.filter(it=>{
+        const k = `${it.title}::${it.link}`;
+        if (seen.has(k)) return false; seen.add(k); return true;
+      }).sort((a,b)=> b.pubDate - a.pubDate);
+
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/New_York'
+      });
+
+      ul.innerHTML = '';
+      unique.slice(0, 20).forEach(({title, link, pubDate, source, byline})=>{
+        const li = document.createElement('li');
+        const by = byline ? ` · by ${byline}` : '';
+        li.innerHTML = `<a href="${link}" target="_blank" rel="noopener">${title}</a><br>
+                        <span class="source">${source}${by} · ${fmt.format(pubDate)}</span>`;
+        ul.appendChild(li);
+      });
+    }
+    loadNews();
+
+    // ——— Scores (via /api/cincy-scores)
+    async function loadScores(){
+      try{
+        const res = await fetch('/api/cincy-scores');
+        if(!res.ok) throw new Error('No endpoint');
+        const data = await res.json();
+
+        const localTeams = ['Reds','Bengals','FC Cincinnati','Bearcats','Xavier','Musketeers','Cyclones'];
+        const onlyLocal = g => localTeams.some(t =>
+          (g.home && g.home.includes(t)) || (g.away && g.away.includes(t))
+        );
+
+        const games = (data.games || []).filter(onlyLocal);
+        const el = document.getElementById('sports-content');
+        el.innerHTML = '';
+
+        if (!games.length) {
+          el.innerHTML = '<div class="muted">No local games found.</div>';
+          return;
+        }
+
+        const h = document.createElement('div');
+        h.style.fontWeight = '700';
+        h.textContent = `${data.label} — ${data.date_local}`;
+        el.appendChild(h);
+
+        games.forEach(g=>{
+          const row = document.createElement('div');
+          row.style.margin = '.5rem 0 .65rem';
+          row.innerHTML = `
+            <div style="font-size:.95rem; color:#6a645b; margin-bottom:.15rem">${g.league} · ${g.time_local}</div>
+            <div>${g.home} ${g.homeScore ?? '—'} · ${g.away} ${g.awayScore ?? '—'}</div>
+            <div class="muted" style="font-size:.85rem">via ${g.provider}</div>
+          `;
+          el.appendChild(row);
+        });
+      }catch(err){
+        document.getElementById('sports-content').innerHTML =
+          '<div class="muted">Scores unavailable.</div>';
+        console.error(err);
+      }
+    }
+    loadScores();
+  </script>
+</body>
+</html>
