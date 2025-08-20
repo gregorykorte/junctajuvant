@@ -4,7 +4,7 @@
   <script defer data-domain="junctajuvant.com" src="https://stats.4gk.us/js/script.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Juncta Juvant — Cincinnati</title>
+  <title>Juncta Juvant — Cincinnati News</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
@@ -47,20 +47,17 @@
     }
     .rule{ height:1px; background:var(--rule); margin:1rem 0 1.25rem; }
 
-/* Keep the image inside the hero box and center its focal point */
-.hero{
-  overflow: hidden;              /* prevents any spill into adjacent columns */
-}
-
-.hero img{
-  width:100%;
-  height:100%;
-  display:block;
-  object-fit:cover;
-  /* add this back so the CSS variables take effect */
-  object-position: var(--hero-x, 50%) var(--hero-y, 50%);
-}
-
+    /* Keep the image inside the hero box and center its focal point */
+    .hero{
+      overflow: hidden; /* prevents any spill into adjacent columns */
+    }
+    .hero img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+      object-position: var(--hero-x, 50%) var(--hero-y, 50%);
+    }
 
     /* Layout: newspaper-ish grid */
     .grid{ display:grid; grid-template-columns: 2fr 1fr; gap:1.25rem; }
@@ -87,53 +84,52 @@
     .wx small{ color:#7a7266; }
 
     /* --- 3-column layout --- */
-.layout{
-  display:grid;
-  gap:1.25rem;
-  /* Unequal widths: News (1.6), Hero (2.2), Right Rail (1) */
-  grid-template-columns: 1.6fr 2.2fr 1fr;
-  grid-template-areas: "news hero rail";
-  align-items:start;
-}
-.news{ grid-area: news; }
-.hero{ grid-area: hero; }
-.rail{ grid-area: rail; display:flex; flex-direction:column; gap:1.25rem; }
+    .layout{
+      display:grid;
+      gap:1.25rem;
+      /* Unequal widths: News (1.6), Hero (2.2), Right Rail (1) */
+      grid-template-columns: 1.6fr 2.2fr 1fr;
+      grid-template-areas: "news hero rail";
+      align-items:start;
+    }
+    .news{ grid-area: news; }
+    .hero{ grid-area: hero; }
+    .rail{ grid-area: rail; display:flex; flex-direction:column; gap:1.25rem; }
 
-/* --- Responsive breakpoints --- */
+    /* --- Responsive breakpoints --- */
+    @media (max-width: 820px){
+      /* Masthead collapses here already */
+      .masthead{
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .masthead > div{ width: 100%; }
 
-@media (max-width: 820px){
-  .masthead{
-    flex-direction: column;      /* stack rows */
-    align-items: center;         /* single center line */
-    justify-content: center;
-  }
+      .flag-col, .poem-col{
+        display: flex;
+        justify-content: center;
+        text-align: center;
+      }
+      .title-col{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        column-count: 1 !important;
+        -webkit-column-count: 1 !important;
+      }
+      .nameplate, .tagline, .dateline{ display:block; }
 
-  .masthead > div{
-    width: 100%;
-  }
-
-  /* Center flag and poem rows */
-  .flag-col,
-  .poem-col{
-    display: flex;
-    justify-content: center;
-    text-align: center;
-  }
-
-  /* Title column stays as THREE stacked lines */
-  .title-col{
-    display: flex;
-    flex-direction: column;      /* <-- key fix */
-    align-items: center;
-    text-align: center;
-    column-count: 1 !important;
-    -webkit-column-count: 1 !important;
-  }
-
-  /* (optional safety) ensure each line is a block */
-  .nameplate, .tagline, .dateline{ display:block; }
-}
-
+      /* NEW: match masthead — stack the layout at 820px */
+      .layout{
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "news"
+          "hero"
+          "rail";
+      }
+    }
 
     /* Footer */
     footer{ margin:2rem 0 1rem; text-align:center; color:#8a8074; font-size:.85rem; }
@@ -222,8 +218,6 @@
 }
 </style>
 
-
-
 <div class="rule"></div>
 
 <main class="layout" aria-live="polite">
@@ -238,10 +232,9 @@
   </section>
 
   <!-- Middle: Hero -->
-
-<figure class="box hero" style="--hero-x: 0%; --hero-y: -20%;" aria-label="Feature photo">
-  <img src="roebling.jpg" alt="Roebling Bridge at sunset" />
-</figure>
+  <figure class="box hero" style="--hero-x: 0%; --hero-y: -20%;" aria-label="Feature photo">
+    <img src="roebling.jpg" alt="Roebling Bridge at sunset" />
+  </figure>
 
   <!-- Right: Weather + Sports -->
   <aside class="rail">
@@ -266,12 +259,12 @@
   </aside>
 </main>
 
-    <footer>
-      <div class="rule" style="margin-top:1.25rem"></div>
-      <div>© <span id="year"></span> junctajuvant.com</div>
-      <div>This site is currently for non-commercial, demonstration purposes only.</div>
-      <div>Powered by <a href="https://goettalife.com">Goetta</a>.</div>
-    </footer>
+<footer>
+  <div class="rule" style="margin-top:1.25rem"></div>
+  <div>© <span id="year"></span> junctajuvant.com</div>
+  <div>This site is currently for non-commercial, demonstration purposes only.</div>
+  <div>Powered by <a href="https://goettalife.com">Goetta</a>.</div>
+</footer>
   </div>
 
   <script>
@@ -288,7 +281,7 @@
     // Update just after midnight ET
     setInterval(renderDate, 60 * 60 * 1000);
 
-    // ——— Weather via Open-Meteo (no key)
+    // ——— Weather via Open‑Meteo (no key)
     async function loadWeather(){
       try{
         const lat = 39.103119, lon = -84.512016; // Cincinnati
@@ -330,139 +323,182 @@
 
     loadWeather();
 
-// ——— Cincinnati news via RSS (proxied through Cloudflare Pages Function at /api/rss-proxy)
-const FEEDS = [
-  { url: 'https://www.wcpo.com/news/local-news.rss',                                     label: 'WCPO' },
-  { url: 'https://www.cincinnatamagazine.com/category/news/feed/',                       label: 'Cincinnati Magazine' },
-  { url: 'https://thecincinnatiherald.com/feed/',                                        label: 'The Cincinnati Herald' },
-  { url: 'https://www.wvxu.org/podcast/cincinnati-edition/rss.xml',                      label: 'WVXU' },
-  { url: 'https://www.citybeat.com/cincinnati/Rss.xml?section=11962257',                 label: 'CityBeat' },
-  { url: 'https://www.wlwt.com/topstories-rss',                                          label: 'WLWT' },
-  { url: 'https://rss.bizjournals.com/feed/cdfd3a38bf00fe702915839e402f927be4566046/13253?market=cincinnati', label: 'Cincinnati Business Courier' },
-  { url: 'https://signalcincinnati.org/feed/',                                           label: 'Signal Cincinnati' },
-  { url: 'https://feeds.feedburner.com/soapboxmedia',                                     label: 'Soapbox Cincinnati' },
-  { url: 'https://www.thecatholictelegraph.com/category/local-news/feed',                                     label: 'Catholic Telegraph' },
-  { url: 'https://www.newsrecord.org/search/?a=64128ff4-dd69-11ee-b9cb-bbbdd76e4cd4&s=start_time&sd=desc&f=rss', label: 'The News Record' },
-  { url: 'https://americanisraelite.com/category/local/feed/', label: 'American Israelite' }
+    // ——— Cincinnati news via RSS (proxied through Cloudflare Pages Function at /api/rss-proxy)
+    const FEEDS = [
+      { url: 'https://www.wcpo.com/news/local-news/hamilton-county/cincinnati.rss',                                     label: 'WCPO' },
+      { url: 'https://www.cincinnatamagazine.com/category/news/feed/',                       label: 'Cincinnati Magazine' },
+      { url: 'https://thecincinnatiherald.com/feed/',                                        label: 'The Cincinnati Herald' },
+      { url: 'https://www.wvxu.org/politics.rss', 
+                           label: 'WVXU' },
+      { url: 'https://www.citybeat.com/cincinnati/Rss.xml?section=11962257',                 label: 'CityBeat' },
+      { url: 'https://www.wlwt.com/local-news-rss',                                          label: 'WLWT' },
+      { url: 'https://rss.bizjournals.com/feed/cdfd3a38bf00fe702915839e402f927be4566046/13253?market=cincinnati', label: 'Cincinnati Business Courier' },
+      { url: 'https://signalcincinnati.org/feed/',                                           label: 'Signal Cincinnati' },
+      { url: 'https://feeds.feedburner.com/soapboxmedia',                                     label: 'Soapbox Cincinnati' },
+      { url: 'https://www.thecatholictelegraph.com/category/local-news/feed',                 label: 'Catholic Telegraph' },
+      { url: 'https://www.newsrecord.org/search/?a=64128ff4-dd69-11ee-b9cb-bbbdd76e4cd4&s=start_time&sd=desc&f=rss', label: 'The News Record' },
+      { url: 'https://americanisraelite.com/category/local/feed/',                            label: 'American Israelite' }
+    ];
 
-];
+    // Renders the list into #news-list
+      items.forEach(({title, link, pubDate, source, byline})=>{
+        const li = document.createElement('li');
+        const by = byline ? ` · by ${byline}` : '';
+        li.innerHTML = `
+          <a href="${link}" target="_blank" rel="noopener">${title}</a><br>
+          <span class="source">${source}${by} · ${fmt.format(pubDate)}</span>
+        `;
+        ul.appendChild(li);
+      });
 
-// Renders the list into #news-list
-function renderNews(items){
-  const ul = document.getElementById('news-list');
-  ul.innerHTML = '';
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+        hour12: true, timeZone: 'America/New_York'
+      });
 
-  if (!items.length){
-    ul.innerHTML = '<li class="muted">No headlines found right now.</li>';
-    return;
+      items.forEach(({title, link, pubDate, source})=>{
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <a href="${link}" target="_blank" rel="noopener">
+            ${title}
+          </a><br>
+          <span class="source">${source} · ${fmt.format(pubDate)}</span>
+        `;
+        ul.appendChild(li);
+      });
+    }
+
+    // Robust loader: supports RSS <item> and Atom <entry>
+    async function loadNews(){
+      const items = [];
+
+      await Promise.all(FEEDS.map(async ({url, label})=>{
+        try{
+          const res = await fetch(`/api/rss-proxy?url=${encodeURIComponent(url)}`);
+          if(!res.ok) return;
+
+          const xml = await res.text();
+          const doc = new DOMParser().parseFromString(xml, 'text/xml');
+
+          // Prefer explicit label (TV call letters, etc.); else channel/feed title; else hostname
+          const fallbackTitle =
+            doc.querySelector('channel > title')?.textContent?.trim() ||
+            doc.querySelector('feed > title')?.textContent?.trim() ||
+            new URL(url).hostname;
+          const sourceLabel = label || fallbackTitle;
+
+          // RSS items and Atom entries
+
+doc.querySelectorAll('item, entry').forEach(it=>{
+  const title = it.querySelector('title')?.textContent?.trim();
+
+  // Link
+  const linkEl = it.querySelector('link');
+  const link = linkEl?.getAttribute?.('href') || linkEl?.textContent?.trim() || '';
+
+  // Date
+  const whenStr =
+    it.querySelector('pubDate')?.textContent ||
+    it.querySelector('updated')?.textContent ||
+    it.querySelector('published')?.textContent || '';
+  const d = whenStr ? new Date(whenStr) : new Date();
+  const pubDate = isNaN(d.getTime()) ? new Date() : d;
+
+  // Bylines (several common locations)
+  const byline =
+    it.querySelector('dc\\:creator')?.textContent?.trim() ||
+    it.querySelector('author > name')?.textContent?.trim() ||
+    it.querySelector('author')?.textContent?.trim() ||
+    it.querySelector('media\\:credit')?.textContent?.trim() ||
+    '';
+
+  // Categories/Tags (helps filter hero)
+  const categories = Array.from(it.querySelectorAll('category')).map(c => c.textContent?.toLowerCase()?.trim()).filter(Boolean);
+
+  // Image: media / enclosure / first <img> in content or summary
+  let imageUrl = it.querySelector('media\\:content')?.getAttribute('url')
+              || it.querySelector('media\\:thumbnail')?.getAttribute('url')
+              || it.querySelector('enclosure[url*=".jpg"], enclosure[url*=".jpeg"], enclosure[url*=".png"]')?.getAttribute('url')
+              || '';
+
+  if (!imageUrl) {
+    const html = it.querySelector('content\\:encoded, content, summary')?.textContent || '';
+    const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (m) imageUrl = m[1];
   }
 
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York'
-  });
+  // Optional: image size hints if present on media:content
+  const mediaEl = it.querySelector('media\\:content, media\\:thumbnail');
+  const imgWidth  = mediaEl?.getAttribute('width')  ? parseInt(mediaEl.getAttribute('width'), 10)  : null;
+  const imgHeight = mediaEl?.getAttribute('height') ? parseInt(mediaEl.getAttribute('height'), 10) : null;
 
-  items.forEach(({title, link, pubDate, source})=>{
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <a href="${link}" target="_blank" rel="noopener">
-        ${title}
-      </a><br>
-      <span class="source">${source} · ${fmt.format(pubDate)}</span>
-    `;
-    ul.appendChild(li);
-  });
-}
+  // Rough word count for hero scoring (strip tags)
+  const rawHtml = it.querySelector('content\\:encoded, content, summary')?.textContent || '';
+  const textOnly = rawHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const wordCount = textOnly ? textOnly.split(' ').length : 0;
 
-// Robust loader: supports RSS <item> and Atom <entry>
-async function loadNews(){
-  const items = [];
-
-  await Promise.all(FEEDS.map(async ({url, label})=>{
-    try{
-      const res = await fetch(`/api/rss-proxy?url=${encodeURIComponent(url)}`);
-      if(!res.ok) return;
-
-      const xml = await res.text();
-      const doc = new DOMParser().parseFromString(xml, 'text/xml');
-
-      // Prefer explicit label (TV call letters, etc.); else channel/feed title; else hostname
-      const fallbackTitle =
-        doc.querySelector('channel > title')?.textContent?.trim() ||
-        doc.querySelector('feed > title')?.textContent?.trim() ||
-        new URL(url).hostname;
-      const sourceLabel = label || fallbackTitle;
-
-      // RSS items and Atom entries
-      doc.querySelectorAll('item, entry').forEach(it=>{
-        const title = it.querySelector('title')?.textContent?.trim();
-
-        // Link can be textContent (<link>http…</link>) or href attr (<link href="…"/>)
-        const linkEl = it.querySelector('link');
-        const link = linkEl?.getAttribute?.('href') || linkEl?.textContent?.trim() || '';
-
-        // Dates: RSS(pubDate) | Atom(updated|published)
-        const whenStr =
-          it.querySelector('pubDate')?.textContent ||
-          it.querySelector('updated')?.textContent ||
-          it.querySelector('published')?.textContent ||
-          '';
-
-        const d = whenStr ? new Date(whenStr) : new Date();
-        const pubDate = isNaN(d.getTime()) ? new Date() : d;
-
-        if(title && link){
-          items.push({ title, link, pubDate, source: sourceLabel });
-        }
-      });
-    }catch(e){
-      console.warn('Feed failed', url, e);
-    }
-  }));
-
-  // Sort newest first; show top 6
-  items.sort((a,b)=> b.pubDate - a.pubDate);
-  renderNews(items.slice(0, 6));
-}
+  if (title && link){
+    items.push({
+      title, link, pubDate,
+      source: sourceLabel,
+      byline,
+      imageUrl, imgWidth, imgHeight,
+      categories,
+      wordCount
+    });
+  }
+});
 
     loadNews();
 
     // ——— Scores: hit your Pages Function at /api/cincy-scores (see function code in repo)
-async function loadScores(){
-  try{
-    const res = await fetch('/api/cincy-scores');
-    if(!res.ok) throw new Error('No endpoint');
-    const data = await res.json();
+    async function loadScores(){
+      try{
+        const res = await fetch('/api/cincy-scores');
+        if(!res.ok) throw new Error('No endpoint');
+        const data = await res.json();
 
-    const el = document.getElementById('sports-content');
-    el.innerHTML = '';
+        const localTeams = ['Reds','Bengals','FC Cincinnati','Bearcats','Xavier','Musketeers','Cyclones'];
+        const onlyLocal = (g) => localTeams.some(t =>
+          (g.home && g.home.includes(t)) || (g.away && g.away.includes(t))
+        );
 
-    const h = document.createElement('div');
-    h.style.fontWeight = '700';
-    h.textContent = `${data.label} — ${data.date_local}`;
-    el.appendChild(h);
+        const games = (data.games || []).filter(onlyLocal);
+        if (!games.length) {
+          document.getElementById('sports-content').innerHTML = '<div class="muted">No local games found.</div>';
+          return;
+        }
 
-    if(!data.games?.length){
-      el.insertAdjacentHTML('beforeend', '<div class="muted">No games found.</div>');
-      return;
+        const el = document.getElementById('sports-content');
+        el.innerHTML = '';
+
+        const h = document.createElement('div');
+        h.style.fontWeight = '700';
+        h.textContent = `${data.label} — ${data.date_local}`;
+        el.appendChild(h);
+
+        if(!data.games?.length){
+          el.insertAdjacentHTML('beforeend', '<div class="muted">No games found.</div>');
+          return;
+        }
+
+        data.games.forEach(g=>{
+          const row = document.createElement('div');
+          row.style.margin = '.5rem 0 .65rem';
+          row.innerHTML = `
+            <div style="font-size:.95rem; color:#6a645b; margin-bottom:.15rem">${g.league} · ${g.time_local}</div>
+            <div>${g.home} ${g.homeScore ?? '—'} · ${g.away} ${g.awayScore ?? '—'}</div>
+            <div class="muted" style="font-size:.85rem">via ${g.provider}</div>
+          `;
+          el.appendChild(row);
+        });
+      }catch(err){
+        document.getElementById('sports-content').innerHTML =
+          '<div class="muted">Scores unavailable.</div>';
+        console.error(err);
+      }
     }
-
-    data.games.forEach(g=>{
-      const row = document.createElement('div');
-      row.style.margin = '.5rem 0 .65rem';
-      row.innerHTML = `
-        <div style="font-size:.95rem; color:#6a645b; margin-bottom:.15rem">${g.league} · ${g.time_local}</div>
-        <div>${g.home} ${g.homeScore ?? '—'} · ${g.away} ${g.awayScore ?? '—'}</div>
-        <div class="muted" style="font-size:.85rem">via ${g.provider}</div>
-      `;
-      el.appendChild(row);
-    });
-  }catch(err){
-    document.getElementById('sports-content').innerHTML =
-      '<div class="muted">Scores unavailable.</div>';
-    console.error(err);
-  }
-}
-loadScores();
-</script>
+    loadScores();
+  </script>
 </body>
 </html>
