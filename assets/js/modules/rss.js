@@ -1,10 +1,9 @@
-// /assets/js/modules/rss.js
 import { FEEDS, TZ, CACHE_TTL_MS } from './config.js';
 
-const CACHE_KEY = 'jj_news_v2';         // includes image metadata
+const CACHE_KEY = 'jj_news_v3';         // bumped: now carries description text
 const MAX_ITEMS = 8;
-const FEED_TIMEOUT_MS = 2000;           // abort slow feeds
-const DEADLINE_MS = 2500;               // render no later than this
+const FEED_TIMEOUT_MS = 2000;
+const DEADLINE_MS = 2500;
 
 let inflight = false;
 let finalized = false;
@@ -32,13 +31,10 @@ function extractFirstImgFromHTML(html){
 function pickImage(itemEl){
   const mediaEls = itemEl.querySelectorAll('media\\:content, media\\:thumbnail');
   let url = '', w, h, caption = '';
-
   for (const m of mediaEls) {
     const u = m.getAttribute('url');
     if (u) {
-      url = u;
-      w = m.getAttribute('width');
-      h = m.getAttribute('height');
+      url = u; w = m.getAttribute('width'); h = m.getAttribute('height');
       const desc = m.querySelector('media\\:description') || itemEl.querySelector('media\\:description');
       if (desc) caption = textOf(desc);
       break;
@@ -85,8 +81,6 @@ function finalize(items){
 
   writeCache(unique);
   render(unique);
-
-  // Let the hero module know fresh news is available
   window.dispatchEvent(new CustomEvent('jj:newsUpdated'));
 }
 
@@ -120,6 +114,7 @@ async function fetchFeed(url, label){
         textOf(it.querySelector('media\\:credit'));
 
       const img = pickImage(it);
+      // description text (strip tags)
       const descRaw = it.querySelector('content\\:encoded, description');
       const descText = (descRaw ? descRaw.textContent : '').replace(/<[^>]+>/g, '').trim();
       const descLen = descText.length;
@@ -128,7 +123,8 @@ async function fetchFeed(url, label){
         title, link, pubDate: isNaN(d.getTime()) ? new Date() : d,
         source: sourceLabel, byline,
         imageUrl: img.url || '', imageCaption: img.caption || '',
-        imageWidth: img.width, imageHeight: img.height, descLen
+        imageWidth: img.width, imageHeight: img.height,
+        description: descText, descLen
       });
     });
     return out;
@@ -146,20 +142,16 @@ export function startNews(){
   const ul = document.getElementById('news-list');
   if (ul) ul.innerHTML = '<li class="muted">Loading headlines…</li>';
 
-  // If fresh cache exists, render instantly and bail
   const cached = readCache();
   if (cached && cached.length){
     render(cached);
     inflight = false;
-    // still fire the event so hero can pick from cache
     window.dispatchEvent(new CustomEvent('jj:newsUpdated'));
     return;
   }
 
-  // Fast-first strategy: collect as feeds resolve; finalize on cap or deadline
   const items = [];
   let renderedEarly = false;
-
   const doneOne = (list=[]) => {
     if (finalized) return;
     for (const it of list) items.push(it);
@@ -169,13 +161,9 @@ export function startNews(){
     }
   };
 
-  // Kick off all fetches
   const promises = FEEDS.map(({url, label}) => fetchFeed(url, label).then(doneOne));
-
-  // Finalize no later than DEADLINE_MS
   const deadline = setTimeout(() => finalize(items), DEADLINE_MS);
 
-  // Also finalize when *all* complete (in case they’re all fast)
   Promise.allSettled(promises).then(() => {
     clearTimeout(deadline);
     finalize(items);
