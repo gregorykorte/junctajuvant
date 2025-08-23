@@ -112,7 +112,20 @@
       display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; }
 
     /* Align hero box top edge with other boxes (which have <h2> padding) */
-    .box.hero { padding-top:.6rem; }
+    /* Remove the default <figure> margins so its top aligns with the other boxes */
+    .box.hero, .hero { margin: 0; }
+
+    /* Keep the top interior inset so text aligns visually with <h2> boxes */
+    .box.hero { padding-top: .6rem; }
+
+    /* Image/text padding */
+    .hero .hero-text  { padding: .8rem .8rem 0; }
+    .hero .hero-media { padding: .6rem .8rem; }
+    .hero .hero-media img { display:block; width:100%; height:auto; border-radius:2px; }
+
+    /* Let the description expand (no line clamp) */
+    .hero-desc { padding: .4rem .8rem .8rem; color:#333; font-size:.98rem; line-height:1.5; 
+      display:block; overflow:visible; }
 
     footer{ margin:2rem 0 1rem; text-align:center; color:#8a8074; font-size:.85rem; }
 
@@ -175,18 +188,23 @@
       </section>
 
       <!-- Middle: Hero (now a full story card) -->
-      <figure class="box hero" style="--hero-x:0%; --hero-y:-20%;" aria-label="Feature photo">
-        <div class="hero-text">
-          <h3 class="hero-headline">
-            <a id="hero-link" href="#" target="_blank" rel="noopener"></a>
-          </h3>
-          <div class="hero-meta source">
-            <span id="hero-source"></span> · <span id="hero-time"></span><span id="hero-byline"></span>
-          </div>
+    <figure class="box hero" style="--hero-x:0%; --hero-y:-20%;" aria-label="Feature photo">
+      <div class="hero-text">
+        <h3 class="hero-headline">
+          <a id="hero-link" href="#" target="_blank" rel="noopener"></a>
+        </h3>
+        <div class="hero-meta source">
+          <span id="hero-source"></span> · <span id="hero-time"></span><span id="hero-byline"></span>
         </div>
+      </div>
+
+      <div class="hero-media">
         <img src="roebling.jpg" alt="Roebling Bridge at sunset">
-        <figcaption class="hero-desc" id="hero-desc"></figcaption>
-      </figure>
+      </div>
+
+      <figcaption class="hero-desc" id="hero-desc"></figcaption>
+    </figure>
+
 
       <!-- Right: Weather + Sports -->
       <aside class="rail">

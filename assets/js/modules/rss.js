@@ -10,6 +10,22 @@ const MAX_PER_SOURCE = 3;         // NEW: diversify
 let inflight = false;
 let finalized = false;
 
+function bylineFrom(item){
+  const txt = sel => item.querySelector(sel)?.textContent?.trim() || '';
+  // Common cases (CityBeat uses dc:creator)
+  let b = txt('dc\\:creator') || txt('author > name') || txt('author') || txt('media\\:credit');
+  if (b) return b;
+  // Fallback: any namespaced *:creator
+  for (const n of item.children || []) {
+    if (/:creator$/i.test(n.nodeName)) {
+      const t = n.textContent.trim();
+      if (t) return t;
+    }
+  }
+  return '';
+}
+
+
 function readCache(){
   try{
     const raw = localStorage.getItem(CACHE_KEY);
@@ -65,24 +81,40 @@ function render(list){
   }).join('');
 }
 
+function packUnique(items, heroLink=null){
+  const seen = new Set();
+  const perSource = new Map();
+  const out = [];
+  for (const it of items.sort((a,b)=> b.pubDate - a.pubDate)) {
+    const k = `${it.title}::${it.link}`;
+    if (seen.has(k)) continue;
+    if (heroLink && it.link === heroLink) continue; // drop hero from rail
+    const n = perSource.get(it.source) || 0;
+    if (n >= MAX_PER_SOURCE) continue;
+    perSource.set(it.source, n+1);
+    seen.add(k);
+    out.push(it);
+    if (out.length >= MAX_ITEMS) break;
+  }
+  return out;
+}
+
 function finalize(items){
   if (finalized) return;
   finalized = true;
 
-  if (!items.length) {
-    const ul = document.getElementById('news-list');
-    if (ul) ul.innerHTML = '<li class="muted">No headlines found.</li>';
-    return;
-  }
+  const heroChoice = (()=>{
+    try { return JSON.parse(localStorage.getItem('jj_hero_choice'))?.link || null; }
+    catch { return null; }
+  })();
 
-  const seen = new Set();
-  const unique = items
-    .filter(it => { const k = `${it.title}::${it.link}`; if (seen.has(k)) return false; seen.add(k); return true; })
-    .sort((a,b)=> b.pubDate - a.pubDate)
-    .slice(0, MAX_ITEMS);
+  const list = packUnique(items, heroChoice);
 
-  writeCache(unique);
-  render(unique);
+  const ul = document.getElementById('news-list');
+  if (!list.length) { if (ul) ul.innerHTML = '<li class="muted">No headlines found.</li>'; return; }
+
+  writeCache(list);
+  render(list);
   window.dispatchEvent(new CustomEvent('jj:newsUpdated'));
 }
 
@@ -114,6 +146,8 @@ async function fetchFeed(url, label){
         textOf(it.querySelector('author > name')) ||
         textOf(it.querySelector('author')) ||
         textOf(it.querySelector('media\\:credit'));
+
+      const byline = bylineFrom(it);
 
       const img = pickImage(it);
       // description text (strip tags)
@@ -151,6 +185,20 @@ export function startNews(){
     window.dispatchEvent(new CustomEvent('jj:newsUpdated'));
     return;
   }
+
+  // After export function startNews(){...}
+window.addEventListener('jj:heroSelected', () => {
+  const cached = readCache();
+  if (!cached || !cached.length) return;
+  const heroLink = (()=>{
+    try { return JSON.parse(localStorage.getItem('jj_hero_choice'))?.link || null; }
+    catch { return null; }
+  })();
+  const list = packUnique(cached, heroLink);
+  writeCache(list);
+  render(list);
+});
+
 
   const items = [];
   let renderedEarly = false;
