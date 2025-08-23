@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cincinnati News Aggregator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 1.5rem;
+    }
+    a {
+      color: #0645ad;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .source {
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .muted {
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <h1>Latest Cincinnati Headlines</h1>
+  <ul id="news-list">
+    <li class="muted">Loading headlines…</li>
+  </ul>
+
+  <script>
+  // ——— Cincinnati news via RSS (proxied through Cloudflare Pages Function at /api/rss-proxy)
+  const FEEDS = [
+    { url: 'https://www.wcpo.com/news/local-news.rss',                                     label: 'WCPO' },
+    { url: 'https://www.cincinnatamagazine.com/category/news/feed/',                       label: 'Cincinnati Magazine' },
+    { url: 'https://thecincinnatiherald.com/feed/',                                        label: 'The Cincinnati Herald' },
+    { url: 'https://www.wvxu.org/podcast/cincinnati-edition/rss.xml',                      label: 'WVXU' },
+    { url: 'https://www.citybeat.com/cincinnati/Rss.xml?section=11962257',                 label: 'CityBeat' },
+    { url: 'https://www.wlwt.com/topstories-rss',                                          label: 'WLWT' },
+    { url: 'https://rss.bizjournals.com/feed/cdfd3a38bf00fe702915839e402f927be4566046/13253?market=cincinnati', label: 'Cincinnati Business Courier' }
+  ];
+
+  // Render the list into #news-list
+  function renderNews(items){
+    const ul = document.getElementById('news-list');
+    ul.innerHTML = '';
+
+    if (!items.length){
+      ul.innerHTML = '<li class="muted">No headlines found right now.</li>';
+      return;
+    }
+
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+      hour12: true, timeZone: 'America/New_York'
+    });
+
+    items.forEach(({title, link, pubDate, source})=>{
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <a href="${link}" target="_blank" rel="noopener">
+          ${title}
+        </a><br>
+        <span class="source">${source} · ${fmt.format(pubDate)}</span>
+      `;
+      ul.appendChild(li);
+    });
+  }
+
+  // Loader: supports both RSS <item> and Atom <entry>
+  async function loadNews(){
+    const items = [];
+
+    await Promise.all(FEEDS.map(async ({url, label})=>{
+      try{
+        const res = await fetch(`/api/rss-proxy?url=${encodeURIComponent(url)}`);
+        if(!res.ok) return;
+
+        const xml = await res.text();
+        const doc = new DOMParser().parseFromString(xml, 'text/xml');
+
+        const fallbackTitle =
+          doc.querySelector('channel > title')?.textContent?.trim() ||
+          doc.querySelector('feed > title')?.textContent?.trim() ||
+          new URL(url).hostname;
+        const sourceLabel = label || fallbackTitle;
+
+        doc.querySelectorAll('item, entry').forEach(it=>{
+          const title = it.querySelector('title')?.textContent?.trim();
+
+          const linkEl = it.querySelector('link');
+          const link = linkEl?.getAttribute?.('href') || linkEl?.textContent?.trim() || '';
+
+          const whenStr =
+            it.querySelector('pubDate')?.textContent ||
+            it.querySelector('updated')?.textContent ||
+            it.querySelector('published')?.textContent ||
+            '';
+
+          const d = whenStr ? new Date(whenStr) : new Date();
+          const pubDate = isNaN(d.getTime()) ? new Date() : d;
+
+          if(title && link){
+            items.push({ title, link, pubDate, source: sourceLabel });
+          }
+        });
+      }catch(e){
+        console.warn('Feed failed', url, e);
+      }
+    }));
+
+    items.sort((a,b)=> b.pubDate - a.pubDate);
+    renderNews(items.slice(0, 6));
+  }
+
+  loadNews();
+  </script>
+</body>
+</html>
