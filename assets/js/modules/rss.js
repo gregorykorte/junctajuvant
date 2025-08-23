@@ -1,8 +1,13 @@
+// /assets/js/modules/rss.js
 import { FEEDS, TZ, CACHE_TTL_MS } from './config.js';
 
-// bump cache key to include image metadata
-const CACHE_KEY = 'jj_news_v2';
+const CACHE_KEY = 'jj_news_v2';         // includes image metadata
+const MAX_ITEMS = 8;
+const FEED_TIMEOUT_MS = 2000;           // abort slow feeds
+const DEADLINE_MS = 2500;               // render no later than this
+
 let inflight = false;
+let finalized = false;
 
 function readCache(){
   try{
@@ -17,24 +22,17 @@ function writeCache(data){
   try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); }catch{}
 }
 
-function textOf(el){
-  return el?.textContent?.trim() || '';
-}
+function textOf(el){ return el?.textContent?.trim() || ''; }
 
 function extractFirstImgFromHTML(html){
-  // very light regex to find first <img src="...">
   const m = /<img[^>]+src=["']([^"']+)["']/i.exec(html || '');
   return m ? m[1] : '';
 }
 
-function pickImage(itemEl, doc){
-  // media:content (preferred)
-  const media = itemEl.querySelector('media\\:content[url], content');
+function pickImage(itemEl){
   const mediaEls = itemEl.querySelectorAll('media\\:content, media\\:thumbnail');
-  let url = '';
-  let w, h, caption = '';
+  let url = '', w, h, caption = '';
 
-  // try explicit media:content/thumbnail nodes
   for (const m of mediaEls) {
     const u = m.getAttribute('url');
     if (u) {
@@ -46,26 +44,15 @@ function pickImage(itemEl, doc){
       break;
     }
   }
-  // enclosure fallback
   if (!url) {
     const enc = itemEl.querySelector('enclosure[url][type^="image/"]');
     if (enc) url = enc.getAttribute('url');
   }
-  // content:encoded / description HTML <img> fallback
   if (!url) {
     const cdata = textOf(itemEl.querySelector('content\\:encoded'));
-    url = extractFirstImgFromHTML(cdata);
+    url = extractFirstImgFromHTML(cdata) || extractFirstImgFromHTML(textOf(itemEl.querySelector('description')));
   }
-  if (!url) {
-    const descHTML = textOf(itemEl.querySelector('description'));
-    url = extractFirstImgFromHTML(descHTML);
-  }
-
-  // caption fallback
-  if (!caption) {
-    caption = textOf(itemEl.querySelector('media\\:description')) || '';
-  }
-
+  if (!caption) caption = textOf(itemEl.querySelector('media\\:description')) || '';
   return { url, width: w ? Number(w) : undefined, height: h ? Number(h) : undefined, caption };
 }
 
@@ -80,78 +67,118 @@ function render(list){
   }).join('');
 }
 
-async function fetchData(){
-  const items = [];
-  await Promise.all(FEEDS.map(async ({url, label})=>{
-    try{
-      const res = await fetch(`/api/rss-proxy?url=${encodeURIComponent(url)}`);
-      if (!res.ok) return;
-      const xml = await res.text();
-      const doc = new DOMParser().parseFromString(xml, 'text/xml');
-      const fallbackTitle = doc.querySelector('channel > title')?.textContent?.trim() || doc.querySelector('feed > title')?.textContent?.trim() || new URL(url).hostname;
-      const sourceLabel = label || fallbackTitle;
+function finalize(items){
+  if (finalized) return;
+  finalized = true;
 
-      doc.querySelectorAll('item, entry').forEach(it=>{
-        const title = textOf(it.querySelector('title'));
-        const linkEl = it.querySelector('link');
-        const link = linkEl?.getAttribute?.('href') || textOf(linkEl) || '';
-        const whenStr = textOf(it.querySelector('pubDate')) || textOf(it.querySelector('updated')) || textOf(it.querySelector('published'));
-        const d = whenStr ? new Date(whenStr) : new Date();
-        const byline =
-          textOf(it.querySelector('dc\\:creator')) ||
-          textOf(it.querySelector('author > name')) ||
-          textOf(it.querySelector('author')) ||
-          textOf(it.querySelector('media\\:credit'));
+  if (!items.length) {
+    const ul = document.getElementById('news-list');
+    if (ul) ul.innerHTML = '<li class="muted">No headlines found.</li>';
+    return;
+  }
 
-        // image extraction
-        const img = pickImage(it, doc);
-
-        // description length proxy (strip tags quickly)
-        const descRaw = it.querySelector('content\\:encoded, description');
-        const descText = (descRaw ? descRaw.textContent : '').replace(/<[^>]+>/g, '').trim();
-        const descLen = descText.length;
-
-        if (title && link) items.push({
-          title, link, pubDate: isNaN(d.getTime()) ? new Date() : d,
-          source: sourceLabel, byline,
-          imageUrl: img.url || '',
-          imageCaption: img.caption || '',
-          imageWidth: img.width,
-          imageHeight: img.height,
-          descLen
-        });
-      });
-    }catch{}
-  }));
-
-  if (!items.length) return [];
   const seen = new Set();
-  return items
+  const unique = items
     .filter(it => { const k = `${it.title}::${it.link}`; if (seen.has(k)) return false; seen.add(k); return true; })
     .sort((a,b)=> b.pubDate - a.pubDate)
-    .slice(0, 8);
+    .slice(0, MAX_ITEMS);
+
+  writeCache(unique);
+  render(unique);
+
+  // Let the hero module know fresh news is available
+  window.dispatchEvent(new CustomEvent('jj:newsUpdated'));
 }
 
-async function refresh(){
-  if (inflight) return;
-  const ul = document.getElementById('news-list');
-  if (ul && !ul.children.length) ul.innerHTML = '<li class="muted">Loading headlines…</li>';
+async function fetchFeed(url, label){
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort('timeout'), FEED_TIMEOUT_MS);
 
-  const cached = readCache();
-  if (cached && cached.length){ render(cached); }
-  if (cached) return; // fresh within TTL
-
-  inflight = true;
   try{
-    const data = await fetchData();
-    if (data.length){ writeCache(data); render(data); }
-    else if (ul) ul.innerHTML = '<li class="muted">No headlines found.</li>';
-  }catch{
-    if (ul) ul.innerHTML = '<li class="muted">No headlines found.</li>';
-  }finally{ inflight = false; }
+    const res = await fetch(`/api/rss-proxy?url=${encodeURIComponent(url)}`, { signal: controller.signal });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const sourceLabel =
+      label ||
+      doc.querySelector('channel > title')?.textContent?.trim() ||
+      doc.querySelector('feed > title')?.textContent?.trim() ||
+      new URL(url).hostname;
+
+    const out = [];
+    doc.querySelectorAll('item, entry').forEach(it=>{
+      const title = textOf(it.querySelector('title'));
+      const linkEl = it.querySelector('link');
+      const link = linkEl?.getAttribute?.('href') || textOf(linkEl) || '';
+      const whenStr = textOf(it.querySelector('pubDate')) || textOf(it.querySelector('updated')) || textOf(it.querySelector('published'));
+      const d = whenStr ? new Date(whenStr) : new Date();
+      const byline =
+        textOf(it.querySelector('dc\\:creator')) ||
+        textOf(it.querySelector('author > name')) ||
+        textOf(it.querySelector('author')) ||
+        textOf(it.querySelector('media\\:credit'));
+
+      const img = pickImage(it);
+      const descRaw = it.querySelector('content\\:encoded, description');
+      const descText = (descRaw ? descRaw.textContent : '').replace(/<[^>]+>/g, '').trim();
+      const descLen = descText.length;
+
+      if (title && link) out.push({
+        title, link, pubDate: isNaN(d.getTime()) ? new Date() : d,
+        source: sourceLabel, byline,
+        imageUrl: img.url || '', imageCaption: img.caption || '',
+        imageWidth: img.width, imageHeight: img.height, descLen
+      });
+    });
+    return out;
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function startNews(){
-  refresh();
-  setInterval(refresh, CACHE_TTL_MS);
+  if (inflight) return;
+  inflight = true;
+
+  const ul = document.getElementById('news-list');
+  if (ul) ul.innerHTML = '<li class="muted">Loading headlines…</li>';
+
+  // If fresh cache exists, render instantly and bail
+  const cached = readCache();
+  if (cached && cached.length){
+    render(cached);
+    inflight = false;
+    // still fire the event so hero can pick from cache
+    window.dispatchEvent(new CustomEvent('jj:newsUpdated'));
+    return;
+  }
+
+  // Fast-first strategy: collect as feeds resolve; finalize on cap or deadline
+  const items = [];
+  let renderedEarly = false;
+
+  const doneOne = (list=[]) => {
+    if (finalized) return;
+    for (const it of list) items.push(it);
+    if (!renderedEarly && items.length >= MAX_ITEMS){
+      renderedEarly = true;
+      finalize(items);
+    }
+  };
+
+  // Kick off all fetches
+  const promises = FEEDS.map(({url, label}) => fetchFeed(url, label).then(doneOne));
+
+  // Finalize no later than DEADLINE_MS
+  const deadline = setTimeout(() => finalize(items), DEADLINE_MS);
+
+  // Also finalize when *all* complete (in case they’re all fast)
+  Promise.allSettled(promises).then(() => {
+    clearTimeout(deadline);
+    finalize(items);
+    inflight = false;
+  });
 }
