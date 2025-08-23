@@ -1,9 +1,11 @@
 import { FEEDS, TZ, CACHE_TTL_MS } from './config.js';
 
-const CACHE_KEY = 'jj_news_v3';         // bumped: now carries description text
-const MAX_ITEMS = 8;
+const CACHE_KEY = 'jj_news_v4';         // bumped: now carries description text
 const FEED_TIMEOUT_MS = 2000;
 const DEADLINE_MS = 2500;
+const MAX_ITEMS = 8;
+const MAX_PER_SOURCE = 3;         // NEW: diversify
+
 
 let inflight = false;
 let finalized = false;
