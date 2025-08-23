@@ -13,3 +13,6 @@
 
 /assets/img/*   # Images can be long-lived
   Cache-Control: public, max-age=31536000, immutable
+  
+/api/news-bundle
+  Cache-Control: public, max-age=0, s-maxage=180, must-revalidate

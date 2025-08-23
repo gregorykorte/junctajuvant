@@ -97,6 +97,16 @@ function setHero(it) {
   window.dispatchEvent(new CustomEvent('jj:heroSelected', { detail: { link: it.link } }));
 }
 
+function setHero(it){ /* your existing setHero(...) unchanged */ }
+
+export function startHero(){
+  // Use server-picked hero when available
+  window.addEventListener('jj:newsHero', (e)=> { if (e.detail) setHero(e.detail); });
+  // Fallback (in case user loads before /api/news returns)
+  // chooseAndSet();  // optional if you want immediate attempt from any stale cache
+}
+
+
 function chooseAndSet() {
   const list = fromCache() || [];
   const candidates = list.filter(it => it.imageUrl && it.description && it.descLen >= 60);
