@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Juncta Juvant — Cincinnati News</title>
+  <title>Juncta Juvant — A Queen City Compendium</title>
 
   <!-- Icons / PWA -->
   <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
@@ -44,9 +44,9 @@
     .dateline{ margin-top:.35rem; font-variant:small-caps; letter-spacing:.08em; color:var(--ink-lite); }
     .rule{ height:1px; background:var(--rule); margin:1rem 0 1.25rem; }
 
-    /* Hero */
-    .hero{ overflow:hidden; }
-    .hero img{ width:100%; height:100%; display:block; object-fit:cover; object-position:var(--hero-x,50%) var(--hero-y,50%); }
+    /* Hero base */
+    .hero{ overflow:hidden; display:flex; flex-direction:column; }
+    .hero img{ width:100%; height:auto; display:block; object-fit:cover; object-position: var(--hero-x,50%) var(--hero-y,50%); }
 
     /* Layout */
     .grid{ display:grid; grid-template-columns:2fr 1fr; gap:1.25rem; }
@@ -69,7 +69,9 @@
     .wx small{ color:#7a7266; }
 
     .layout{
-      display:grid; gap:1.25rem; grid-template-columns:1.6fr 2.2fr 1fr;
+      display:grid; gap:1.25rem;
+      /* Wider middle column for a bigger hero */
+      grid-template-columns: 1.4fr 2.8fr 1fr;
       grid-template-areas:"news hero rail"; align-items:start;
     }
     .news{ grid-area:news; } .hero{ grid-area:hero; }
@@ -97,7 +99,41 @@
       }
     }
 
+    /* Hero card text + padding */
+    .hero .hero-text { padding:.8rem .8rem 0; }
+    .hero-headline { margin:0; font-family:"Newsreader",Georgia,serif; font-weight:700;
+      font-size:clamp(1.05rem,2.2vw,1.35rem); line-height:1.15; }
+    .hero-headline a { color:#111; text-decoration:none; font-weight:700; }
+    .hero-headline a:hover { text-decoration:underline; }
+
+    .hero-meta.source { margin-top:.25rem; } /* use same styling as rail via .source */
+
+    .hero-desc { padding:.6rem .8rem .8rem; color:#333; font-size:.98rem; line-height:1.35;
+      display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; }
+
+    /* Align hero box top edge with other boxes (which have <h2> padding) */
+    .box.hero { padding-top:.6rem; }
+
     footer{ margin:2rem 0 1rem; text-align:center; color:#8a8074; font-size:.85rem; }
+
+    /* Ensure masthead lines actually break on small screens */
+    .title-col .nameplate,
+    .title-col .tagline,
+    .title-col .dateline {
+      display: block;              /* belt-and-suspenders */
+    }
+
+    @media (max-width: 820px) {
+      .title-col .nameplate,
+      .title-col .tagline,
+      .title-col .dateline {
+        white-space: normal;       /* allow wrapping */
+      }
+      .title-col .tagline { margin-bottom: .2rem; }
+      .title-col .dateline { margin-top: .2rem; }
+    }
+
+
   </style>
 </head>
 <body>
@@ -128,6 +164,7 @@
     <div class="rule"></div>
 
     <main class="layout" aria-live="polite">
+      <!-- Left: News -->
       <section class="box news" id="news-box">
         <h2>Latest Cincinnati News</h2>
         <div class="content">
@@ -137,21 +174,21 @@
         </div>
       </section>
 
-<figure class="box hero" style="--hero-x:0%; --hero-y:-20%;" aria-label="Feature photo">
-  <div class="hero-text">
-    <h3 class="hero-headline">
-      <a id="hero-link" href="#" target="_blank" rel="noopener"></a>
-    </h3>
-    <div class="hero-meta">
-      <span id="hero-source"></span> · <span id="hero-time"></span>
-      <span id="hero-byline"></span>
-    </div>
-  </div>
-  <img src="roebling.jpg" alt="Roebling Bridge at sunset">
-  <figcaption class="hero-desc" id="hero-desc"></figcaption>
-</figure>
+      <!-- Middle: Hero (now a full story card) -->
+      <figure class="box hero" style="--hero-x:0%; --hero-y:-20%;" aria-label="Feature photo">
+        <div class="hero-text">
+          <h3 class="hero-headline">
+            <a id="hero-link" href="#" target="_blank" rel="noopener"></a>
+          </h3>
+          <div class="hero-meta source">
+            <span id="hero-source"></span> · <span id="hero-time"></span><span id="hero-byline"></span>
+          </div>
+        </div>
+        <img src="roebling.jpg" alt="Roebling Bridge at sunset">
+        <figcaption class="hero-desc" id="hero-desc"></figcaption>
+      </figure>
 
-
+      <!-- Right: Weather + Sports -->
       <aside class="rail">
         <section class="box" id="weather-box" aria-live="polite">
           <h2>Weather</h2>
@@ -181,6 +218,6 @@
   </div>
 
   <!-- Load the modular JS bundle -->
-<script type="module" src="/assets/js/main.js?v=5"></script>
+<script type="module" src="/assets/js/main.js?v=2025-08-22-8"></script>
 </body>
 </html>

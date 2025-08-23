@@ -1,8 +1,10 @@
-import { setDatelineWithAD, setYearRoman, setCopyrightBrand } from './modules/date.js';
-import { startWeather } from './modules/weather.js';
-import { startNews } from './modules/rss.js';
-import { startScores } from './modules/scores.js';
-import { startHero } from './modules/hero.js';
+const V = '?v=2025-08-22-8';
+
+import { setDatelineWithAD, setYearRoman, setCopyrightBrand } from './modules/date.js'   + V;
+import { startWeather }  from './modules/weather.js' + V;
+import { startNews }     from './modules/rss.js'     + V;
+import { startScores }   from './modules/scores.js'  + V;
+import { startHero }     from './modules/hero.js'    + V;
 
 document.addEventListener('DOMContentLoaded', () => {
   setDatelineWithAD();
