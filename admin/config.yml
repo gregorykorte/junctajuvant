@@ -3,8 +3,8 @@ backend:
   repo: gregorykorte/junctajuvant   # <- change this
   branch: main
   # For auth you’ll add a GitHub OAuth app + a tiny auth endpoint later
-  # base_url: /api/decap-auth           # (we’ll add this endpoint next)
-  # auth_endpoint: /api/decap-auth/callback
+  base_url: /api/decap-auth           # (we’ll add this endpoint next)
+  auth_endpoint: auth
 
 site_url: https://junctajuvant.com
 display_url: https://junctajuvant.com
