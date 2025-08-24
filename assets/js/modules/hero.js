@@ -1,4 +1,3 @@
-// /assets/js/modules/hero.js — clean, single export
 import { TZ } from './config.js';
 
 function setHero(it) {
@@ -6,13 +5,13 @@ function setHero(it) {
   const img = fig?.querySelector('img');
   if (!fig || !img || !it) return;
 
-  // Headline link
+  // Headline
   const a = document.getElementById('hero-link');
   if (a) { a.textContent = it.title || ''; a.href = it.link || '#'; }
 
-  // Meta (matches rail styling)
+  // Meta (matches rail)
   const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: TZ, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+    timeZone: TZ, month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true
   });
   const src = document.getElementById('hero-source');
   const when = document.getElementById('hero-time');
@@ -22,19 +21,14 @@ function setHero(it) {
   if (by)   by.textContent   = it.byline ? ` · by ${it.byline}` : '';
 
   // Image + alt
-  img.src = it.imageUrl || img.src;
+  if (it.imageUrl) img.src = it.imageUrl;
   img.alt = it.title || 'Feature photo';
 
-  // Description
-  const desc = document.getElementById('hero-desc');
-  if (desc) desc.textContent = it.description || '';
-
-  // inside setHero(it) where you set the description:
+  // Description: prefer firstParagraph (server) then full description
   const desc = document.getElementById('hero-desc');
   if (desc) desc.textContent = it.firstParagraph || it.description || '';
 
-
-  // Make whole figure clickable
+  // Clickable figure
   const open = () => { if (it.link) window.open(it.link, '_blank', 'noopener'); };
   fig.style.cursor = 'pointer';
   fig.setAttribute('role','link');
@@ -42,12 +36,12 @@ function setHero(it) {
   fig.onclick = open;
   fig.onkeyup = (e)=>{ if (e.key === 'Enter') open(); };
 
-  // Remember selection so rail drops this story
+  // Tell rail to drop the hero
   try { localStorage.setItem('jj_hero_choice', JSON.stringify({ link: it.link, ts: Date.now() })); } catch {}
   window.dispatchEvent(new CustomEvent('jj:heroSelected', { detail: { link: it.link } }));
 }
 
-export function startHero() {
-  // Use server-picked hero from /api/news
-  window.addEventListener('jj:newsHero', (e) => { if (e.detail) setHero(e.detail); });
+export function startHero(){
+  // Use server-picked hero
+  window.addEventListener('jj:newsHero', (e)=> { if (e.detail) setHero(e.detail); });
 }
