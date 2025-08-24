@@ -23,9 +23,9 @@ const FEEDS = [
   { url:'https://spectrumlocalnews.com/services/contentfeed.oh|cincinnati|news.landing.rss', label:'Spectrum News 1 (Cincinnati)' },
 ];
 
-const TTL = 300;               // seconds – everyone sees the same set for ~5 minutes
+const TTL = 120;               // seconds – everyone sees the same set for ~2 minutes
 const PER_FEED_TIMEOUT = 2000; // ms per feed
-const MAX_ITEMS = 8;           // rail length
+const MAX_ITEMS = 5;           // rail length
 const MAX_PER_SOURCE = 1;      // rail: at most one per outlet (hero can be same outlet)
 const UA = 'Mozilla/5.0 JJFeed/1.0 (+https://junctajuvant.com)';
 
@@ -45,7 +45,18 @@ function decodeEntities(s='') {
   s = s.replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
   return s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'");
 }
-const untag = (s='') => decodeEntities((s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
+// CDATA-aware untag: unwrap CDATA, strip tags, collapse spaces, then decode entities
+const untag = (s = '') => {
+  if (!s) return '';
+  // 1) unwrap <![CDATA[ ... ]]>
+  s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+  // 2) remove HTML tags
+  s = s.replace(/<[^>]+>/g, '');
+  // 3) collapse whitespace
+  s = s.replace(/\s+/g, ' ').trim();
+  // 4) decode entities (relies on your existing decodeEntities)
+  return decodeEntities(s);
+};
 
 function bylineFrom(itemXML){
   const contentOf = (n) => { const m = re(`<${n}[^>]*>([\\s\\S]*?)<\\/${n}>`).exec(itemXML); return m ? m[1] : ''; };
