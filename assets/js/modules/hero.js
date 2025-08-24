@@ -29,6 +29,11 @@ function setHero(it) {
   const desc = document.getElementById('hero-desc');
   if (desc) desc.textContent = it.description || '';
 
+  // inside setHero(it) where you set the description:
+  const desc = document.getElementById('hero-desc');
+  if (desc) desc.textContent = it.firstParagraph || it.description || '';
+
+
   // Make whole figure clickable
   const open = () => { if (it.link) window.open(it.link, '_blank', 'noopener'); };
   fig.style.cursor = 'pointer';
