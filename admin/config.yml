@@ -1,17 +1,15 @@
 backend:
   name: github
-  repo: gregorykorte/junctajuvant   # <- change this
+  repo: gregorykorte/junctajuvant
   branch: main
-  # For auth you’ll add a GitHub OAuth app + a tiny auth endpoint later
-  base_url: /api/decap-auth           # (we’ll add this endpoint next)
-  auth_endpoint: auth
+  base_url: /api/decap-auth   # resolves to https://junctajuvant.pages.dev/api/decap-auth
+  auth_endpoint: auth         # <-- no leading slash
 
 site_url: https://junctajuvant.pages.dev
-display_url: https://junctajuvant.com
-logo_url: /favicon.ico
+display_url: https://junctajuvant.pages.dev
 
-media_folder: "assets/uploads"    # files stored in repo
-public_folder: "/assets/uploads"  # how they’re served
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
 
 collections:
   - label: "Pages"
@@ -19,32 +17,18 @@ collections:
     folder: "content/pages"
     create: true
     slug: "{{slug}}"
-    editor:
-      preview: false
+    editor: { preview: false }
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Body",  name: "body",  widget: "markdown" }
-
-  - label: "Notes"         # optional short posts
-    name: "notes"
-    folder: "content/notes"
-    create: true
-    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-    editor:
-      preview: false
-    fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Body",  name: "body",  widget: "markdown" }
-
-  - label: "Overrides"     # safe, non-sensitive editorial controls
+  - label: "Overrides"
     name: "overrides"
     files:
       - label: "Site Overrides"
         name: "site"
         file: "data/overrides.json"
-        editor:
-          preview: false
+        editor: { preview: false }
         fields:
-          - { label: "Pin Hero URL (optional)", name: "pin_hero_url", widget: "string", required: false }
+          - { label: "Pin Hero URL", name: "pin_hero_url", widget: "string", required: false }
           - { label: "Hide Sources (slugs)", name: "hide_sources", widget: "list", required: false }
           - { label: "Custom Tagline", name: "custom_tagline", widget: "string", required: false }
