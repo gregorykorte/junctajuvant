@@ -16,3 +16,8 @@
   
 /api/news-bundle
   Cache-Control: public, max-age=0, s-maxage=180, must-revalidate
+
+/admin*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+

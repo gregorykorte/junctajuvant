@@ -1,0 +1,50 @@
+backend:
+  name: github
+  repo: your-github-username/your-repo   # <- change this
+  branch: main
+  # For auth you’ll add a GitHub OAuth app + a tiny auth endpoint later
+  # base_url: /api/decap-auth           # (we’ll add this endpoint next)
+  # auth_endpoint: /api/decap-auth/callback
+
+site_url: https://junctajuvant.com
+display_url: https://junctajuvant.com
+logo_url: /favicon.ico
+
+media_folder: "assets/uploads"    # files stored in repo
+public_folder: "/assets/uploads"  # how they’re served
+
+collections:
+  - label: "Pages"
+    name: "pages"
+    folder: "content/pages"
+    create: true
+    slug: "{{slug}}"
+    editor:
+      preview: false
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Body",  name: "body",  widget: "markdown" }
+
+  - label: "Notes"         # optional short posts
+    name: "notes"
+    folder: "content/notes"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    editor:
+      preview: false
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Body",  name: "body",  widget: "markdown" }
+
+  - label: "Overrides"     # safe, non-sensitive editorial controls
+    name: "overrides"
+    files:
+      - label: "Site Overrides"
+        name: "site"
+        file: "data/overrides.json"
+        editor:
+          preview: false
+        fields:
+          - { label: "Pin Hero URL (optional)", name: "pin_hero_url", widget: "string", required: false }
+          - { label: "Hide Sources (slugs)", name: "hide_sources", widget: "list", required: false }
+          - { label: "Custom Tagline", name: "custom_tagline", widget: "string", required: false }
