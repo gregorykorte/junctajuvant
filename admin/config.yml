@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: your-github-username/your-repo   # <- change this
+  repo: gregorykorte/junctajuvant   # <- change this
   branch: main
   # For auth you’ll add a GitHub OAuth app + a tiny auth endpoint later
   # base_url: /api/decap-auth           # (we’ll add this endpoint next)
