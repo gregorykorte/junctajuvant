@@ -2,8 +2,9 @@ backend:
   name: github
   repo: gregorykorte/junctajuvant
   branch: main
-  base_url: https://auth.junctajuvant.com
+  base_url: https://junctajuvant.com/api/decap-auth
   auth_endpoint: auth
+
 
 site_url: https://junctajuvant.pages.dev
 display_url: https://junctajuvant.pages.dev
