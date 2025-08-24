@@ -38,6 +38,33 @@ const attr = (xml, name) => { const m = re(`${name}\\s*=\\s*"(.*?)"`).exec(xml);
 const first = (xml, ...names) => { for (const n of names){ const v = tag(xml, n); if (v) return v; } return ''; };
 const firstMatch = (xml, ...rxs) => { for (const r of rxs){ const m = r.exec(xml); if (m) return m[1]; } return ''; };
 
+
+// functions/api/news.js
+export async function onRequestGet({ request, env }) {
+  const url = new URL(request.url);
+  const force = url.searchParams.get('force') === '1';
+
+  // ... your constants / helpers above ...
+
+  // Serve cached only when NOT forced
+  if (!force) {
+    const cached = await env.NEWS_CACHE.get(CUR, { type: 'json' });
+    if (cached) {
+      return new Response(JSON.stringify(cached), {
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': `public, s-maxage=${TTL}, max-age=0, must-revalidate`,
+          'x-cache': 'kv'
+        }
+      });
+    }
+  }
+
+  // else: build fresh bundle and store in KV, then return it…
+  // (rest of your existing code)
+}
+
+
 // Decode HTML entities (numeric + common named)
 function decodeEntities(s='') {
   if (!s) return '';
