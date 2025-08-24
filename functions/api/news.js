@@ -14,12 +14,16 @@ const FEEDS = [
   { url:'https://www.thecatholictelegraph.com/category/local-news/feed', label:'Catholic Telegraph' },
   { url:'https://www.newsrecord.org/search/?a=64128ff4-dd69-11ee-b9cb-bbbdd76e4cd4&s=start_time&sd=desc&f=rss', label:'The News Record' },
   { url:'https://americanisraelite.com/category/local/feed/', label:'American Israelite' },
+  { url:'https://ohiocapitaljournal.com/feed/localFeed', label:'Ohio Capital Journal' },
+  { url:'https://www.statenews.org/section/the-ohio-newsroom.rss', label:'Statehouse News Bureau' },
+  { url:'https://spectrumlocalnews.com/services/contentfeed.oh|cincinnati|news.landing.rss', label:'Spectrum News 1 (Cincinnati)' },
+
 ];
 
 const TTL = 180;                // everyone sees same set for 3 minutes
 const PER_FEED_TIMEOUT = 2000;
-const MAX_ITEMS = 8;
-const MAX_PER_SOURCE = 3;
+const MAX_ITEMS = 4;
+const MAX_PER_SOURCE = 1;
 const UA = 'Mozilla/5.0 JJFeed/1.0 (+https://junctajuvant.com)';
 
 // --- helpers (edge-safe, regex-based XML scraping) ---
