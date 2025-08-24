@@ -6,7 +6,7 @@ backend:
   base_url: /api/decap-auth           # (we’ll add this endpoint next)
   auth_endpoint: auth
 
-site_url: https://junctajuvant.com
+site_url: https://junctajuvant.pages.dev
 display_url: https://junctajuvant.com
 logo_url: /favicon.ico
 
