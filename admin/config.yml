@@ -1,12 +1,24 @@
+local_backend: true   # <- key line: no OAuth when working locally
+# Use DecapBridge auth (required)
 backend:
-  name: gitlab
+  name: git-gateway
   repo: gregorykorte/junctajuvant
   branch: main
-  auth_type: pkce
-  app_id: 7a403299c27e22e0ec373dca00a02512150a6af9912a597cfbbb291044db2ee7
-  api_root: https://gitlab.com/api/v4
+  identity_url: https://auth.decapbridge.com/sites/1dcccfa0-9ecd-4aa0-af70-c84e60d6237b
+  gateway_url: https://gateway.decapbridge.com
 
+  # Quickly see who did what (optional)
+  commit_messages:
+    create: Create {{collection}} “{{slug}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    update: Update {{collection}} “{{slug}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    delete: Delete {{collection}} “{{slug}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    uploadMedia: Upload “{{path}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    deleteMedia: Delete “{{path}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    openAuthoring: Message {{message}} - {{author-name}} <{{author-login}}> via DecapBridge
+
+# Add site links in DecapCMS (optional)
 site_url: https://junctajuvant.com
+
 display_url: https://junctajuvant.com
 
 logo_url: /favicon
