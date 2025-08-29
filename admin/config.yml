@@ -1,6 +1,10 @@
 backend:
-  name: git-gateway
+  name: gitlab
+  repo: gregorykorte/junctajuvant
   branch: main
+  auth_type: pkce
+  app_id: 7a403299c27e22e0ec373dca00a02512150a6af9912a597cfbbb291044db2ee7
+  api_root: https://gitlab.com/api/v4
 
 site_url: https://junctajuvant.com
 display_url: https://junctajuvant.com
