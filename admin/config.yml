@@ -1,9 +1,6 @@
 backend:
-  name: github
-  repo: gregorykorte/junctajuvant
+  name: git-gateway
   branch: main
-  base_url: https://junctajuvant.com
-  auth_endpoint: auth
 
 site_url: https://junctajuvant.com
 display_url: https://junctajuvant.com
