@@ -2,12 +2,13 @@ backend:
   name: github
   repo: gregorykorte/junctajuvant
   branch: main
-  base_url: https://junctajuvant.pages.dev
+  base_url: https://junctajuvant.com
   auth_endpoint: auth
 
-site_url: https://junctajuvant.pages.dev
-display_url: https://junctajuvant.pages.dev
+site_url: https://junctajuvant.com
+display_url: https://junctajuvant.com
 
+logo_url: /favicon
 
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
