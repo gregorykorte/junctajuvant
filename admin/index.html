@@ -12,23 +12,45 @@
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
 
-  <script>window.CMS_MANUAL_INIT = true;</script>
-  <script src="/admin/decap-cms.js" defer></script>
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      function boot() {
-        if (window.CMS && window.CMS.init) {
-          CMS.init({ config: '/admin/config.yml' });
-        } else {
-          const s = document.createElement('script');
-          s.src = 'https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js';
-          s.onload = () => CMS.init({ config: '/admin/config.yml' });
-          document.head.appendChild(s);
+<!-- 1) Tell Decap we’ll init manually -->
+<script>window.CMS_MANUAL_INIT = true;</script>
+
+<!-- 2) Load the LOCAL bundle with NO defer so it executes immediately -->
+<script src="/admin/decap-cms.js"></script>
+
+<!-- 3) Shim: capture the OAuth success message and persist the token -->
+<script>
+  (function () {
+    var PREFIX = 'authorization:github:success:';
+    window.addEventListener('message', function (e) {
+      var msg = e && e.data;
+      if (typeof msg === 'string' && msg.indexOf(PREFIX) === 0) {
+        try {
+          var payload = JSON.parse(msg.slice(PREFIX.length));
+          if (payload && payload.token) {
+            // Save where Decap/Netlify CMS looks
+            var userObj = { token: payload.token };
+            localStorage.setItem('decap-cms-user', JSON.stringify(userObj));
+            localStorage.setItem('netlify-cms-user', JSON.stringify(userObj)); // belt & suspenders
+            // Reload so CMS boots with the stored token
+            location.replace(location.pathname + location.search + location.hash);
+          }
+        } catch (err) {
+          console.error('OAuth token parse error:', err);
         }
       }
-      boot();
-    });
-  </script>
+    }, false);
+  })();
+</script>
+
+<!-- 4) Initialize Decap right away -->
+<script>
+  if (window.CMS && CMS.init) {
+    CMS.init({ config: '/admin/config.yml' });
+  } else {
+    console.error('Decap bundle not loaded yet.');
+  }
+</script>
   <style>html,body{height:100%}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}</style>
 </head>
 <body><noscript>Decap CMS requires JavaScript.</noscript></body>
