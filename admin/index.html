@@ -5,8 +5,6 @@
   <title>The Juncta Juvant — Admin</title>
   <meta name="robots" content="noindex,nofollow" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Your favicon(s) -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-32.png" sizes="32x32" />
   <link rel="icon" href="/favicon-16.png" sizes="16x16" />
@@ -14,10 +12,24 @@
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
 
-  <!-- Decap CMS (one include only) -->
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script>window.CMS_MANUAL_INIT = true;</script>
+  <script src="/admin/decap-cms.js" defer></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      function boot() {
+        if (window.CMS && window.CMS.init) {
+          CMS.init({ config: '/admin/config.yml' });
+        } else {
+          const s = document.createElement('script');
+          s.src = 'https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js';
+          s.onload = () => CMS.init({ config: '/admin/config.yml' });
+          document.head.appendChild(s);
+        }
+      }
+      boot();
+    });
+  </script>
+  <style>html,body{height:100%}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}</style>
 </head>
-<body>
-  <!-- Decap auto-initializes and will load /admin/config.yml by default -->
-</body>
+<body><noscript>Decap CMS requires JavaScript.</noscript></body>
 </html>

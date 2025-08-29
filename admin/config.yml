@@ -1,34 +1,27 @@
-# public/admin/config.yml
 backend:
   name: github
   repo: gregorykorte/junctajuvant
   branch: main
-  base_url: /api/decap-auth    # ← relative; works on both hosts
+  base_url: /api/decap-auth
   auth_endpoint: auth
 
-site_url: https://junctajuvant.com     # optional; used for previews only
-display_url: https://junctajuvant.com  # optional
-
+site_url: https://junctajuvant.com
+display_url: https://junctajuvant.com
 logo_url: /favicon
 
-media_folder: "public/uploads"   # files written into the repo
-public_folder: "/uploads"        # how the site references them
+media_folder: "public/uploads"
+public_folder: "/uploads"
 
 publish_mode: editorial_workflow
-slug:
-  encoding: "unicode"
-  clean_accents: true
-  sanitize_replacement: "-"
 
-# Keep your existing collections here; example below if you need one:
 collections:
-  - name: "posts"
-    label: "Posts"
-    folder: "content/posts"
+  - name: posts
+    label: Posts
+    folder: content/posts
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Date", name: "date", widget: "datetime" }
-      - { label: "Description", name: "description", widget: "text", required: false }
-      - { label: "Body", name: "body", widget: "markdown" }
+      - { label: Title, name: title, widget: string }
+      - { label: Date, name: date, widget: datetime }
+      - { label: Description, name: description, widget: text, required: false }
+      - { label: Body, name: body, widget: markdown }
