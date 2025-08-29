@@ -9,7 +9,7 @@ backend:
 site_url: https://junctajuvant.com     # optional; used for previews only
 display_url: https://junctajuvant.com  # optional
 
-logo_url: /favicon-48x48.png
+logo_url: /favicon
 
 media_folder: "public/uploads"   # files written into the repo
 public_folder: "/uploads"        # how the site references them
