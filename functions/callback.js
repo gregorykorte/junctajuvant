@@ -1,127 +1,72 @@
-export async function onRequest(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
+// functions/api/decap-auth/callback.js
+// Cloudflare Pages Function: OAuth callback relay for Decap.
+// - Accepts GET /api/decap-auth/callback?code=...&state=... (and optional ?provider=...)
+// - Redirects to /admin/#callback?... so the CMS can finish auth in the browser.
+// - Single export only to avoid "Multiple exports with the same name 'onRequest'".
 
-  const code = url.searchParams.get("code") || "";
-  const state = url.searchParams.get("state") || "";
+export async function onRequest({ request }) {
+  try {
+    const url = new URL(request.url);
 
-  // Verify state cookie
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const match = cookieHeader.match(/decap_oauth_state=([^;]+)/);
-  const cookieVal = match ? match[1] : null;
-
-  const enc = new TextEncoder();
-  async function hmac(input, secret) {
-    const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(input)));
-    return btoa(String.fromCharCode(...sig)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  }
-
-  let valid = false;
-  if (cookieVal) {
-    const [savedState, mac] = cookieVal.split(".");
-    if (savedState && mac) {
-      const expected = await hmac(savedState, env.COOKIE_SECRET);
-      valid = savedState === state && mac === expected;
+    // Handle CORS preflight defensively (some IdP setups preflight).
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders(request) });
     }
-  }
-  if (!valid) return new Response("Invalid OAuth state", { status: 400 });
 
-  const callbackUrl = `${url.origin}/callback`;
-  const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: { "Accept": "application/json" },
-    body: new URLSearchParams({
-      client_id: env.GITHUB_CLIENT_ID,
-      client_secret: env.GITHUB_CLIENT_SECRET,
-      code,
-      redirect_uri: callbackUrl
-    })
-  });
+    // If the IdP sent an error, surface it to the CMS.
+    const err =
+      url.searchParams.get("error_description") ||
+      url.searchParams.get("error") ||
+      "";
 
-  if (!tokenRes.ok) return new Response(`Token exchange failed: ${await tokenRes.text()}`, { status: 502 });
+    if (err) {
+      const back = `${url.origin}/admin/#callback?error=${encodeURIComponent(
+        err
+      )}`;
+      return Response.redirect(back, 302);
+    }
 
-  const { access_token } = await tokenRes.json();
-  if (!access_token) return new Response("No access_token returned", { status: 502 });
+    // Normal success path: pass through code/state (+ any provider hint).
+    const code = url.searchParams.get("code") || "";
+    const state = url.searchParams.get("state") || "";
+    const provider = url.searchParams.get("provider") || "";
 
-  const clear = `decap_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Domain=${url.hostname}`;
+    // Some flows may not include query params (hash-only). Relay whatever we have.
+    const qs = new URLSearchParams();
+    if (code) qs.set("code", code);
+    if (state) qs.set("state", state);
+    if (provider) qs.set("provider", provider);
 
-  const html = `<!doctype html><meta charset="utf-8"><title>Logging in…</title>
+    // If no known params exist, emit a tiny relay page that forwards query → hash.
+    if (![...qs.keys()].length) {
+      const relayHtml = `<!doctype html><meta charset="utf-8">
 <script>
-  (function(){
-    var token = ${JSON.stringify(access_token)};
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage({ token: token }, ${JSON.stringify(env.CMS_ORIGIN)});
+  const p = new URLSearchParams(location.search);
+  location.replace('${url.origin}/admin/#callback?' + p.toString());
+</script>`;
+      return new Response(relayHtml, {
+        status: 200,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
     }
-    window.close();
-  })();
-</script>
-<body>Login complete. You can close this window.</body>`;
 
-  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Set-Cookie": clear } });
+    const dest = `${url.origin}/admin/#callback?${qs.toString()}`;
+    return Response.redirect(dest, 302);
+  } catch (e) {
+    console.error("decap-auth callback error:", e);
+    return new Response(
+      "Callback error: " + (e?.message || String(e)),
+      { status: 500, headers: { "content-type": "text/plain; charset=utf-8" } }
+    );
+  }
 }
 
-export async function onRequest({ request, env }) {
-  const required = ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "COOKIE_SECRET", "CMS_ORIGIN"];
-  const missing = required.filter(k => !env[k]);
-  if (missing.length) {
-    return new Response("Missing env: " + missing.join(","), { status: 500 });
-  }
-
-  const url = new URL(request.url);
-  const code = url.searchParams.get("code") || "";
-  const state = url.searchParams.get("state") || "";
-
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const match = cookieHeader.match(/decap_oauth_state=([^;]+)/);
-  const cookieVal = match ? match[1] : null;
-
-  const enc = new TextEncoder();
-  async function hmac(input, secret) {
-    const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(input)));
-    return btoa(String.fromCharCode(...sig)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  }
-
-  let valid = false;
-  if (cookieVal) {
-    const [savedState, mac] = cookieVal.split(".");
-    if (savedState && mac) {
-      const expected = await hmac(savedState, env.COOKIE_SECRET);
-      valid = savedState === state && mac === expected;
-    }
-  }
-  if (!valid) return new Response("Invalid OAuth state", { status: 400 });
-
-  const callbackUrl = `${url.origin}/callback`;
-  const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: { "Accept": "application/json" },
-    body: new URLSearchParams({
-      client_id: env.GITHUB_CLIENT_ID,
-      client_secret: env.GITHUB_CLIENT_SECRET,
-      code,
-      redirect_uri: callbackUrl
-    })
-  });
-  if (!tokenRes.ok) return new Response(`Token exchange failed: ${await tokenRes.text()}`, { status: 502 });
-
-  const { access_token } = await tokenRes.json();
-  if (!access_token) return new Response("No access_token returned", { status: 502 });
-
-  const host = url.hostname;
-  const clear = `decap_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Domain=${host}`;
-
-  const html = `<!doctype html><meta charset="utf-8"><title>Logging in…</title>
-<script>
-  (function(){
-    var token = ${JSON.stringify(access_token)};
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage({ token: token }, ${JSON.stringify(env.CMS_ORIGIN)});
-    }
-    window.close();
-  })();
-</script>
-<body>Login complete. You can close this window.</body>`;
-  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Set-Cookie": clear } });
+function corsHeaders(req) {
+  const origin = req.headers.get("Origin") || "*";
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Vary": "Origin",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+  };
 }
