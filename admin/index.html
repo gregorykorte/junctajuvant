@@ -5,53 +5,21 @@
   <title>The Juncta Juvant — Admin</title>
   <meta name="robots" content="noindex,nofollow" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Favicons (fine as-is) -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-32.png" sizes="32x32" />
   <link rel="icon" href="/favicon-16.png" sizes="16x16" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
-
-<!-- 1) Tell Decap we’ll init manually -->
-<script>window.CMS_MANUAL_INIT = true;</script>
-
-<!-- 2) Load the LOCAL bundle with NO defer so it executes immediately -->
-<script src="/admin/decap-cms.js"></script>
-
-<!-- 3) Shim: capture the OAuth success message and persist the token -->
-<script>
-  (function () {
-    var PREFIX = 'authorization:github:success:';
-    window.addEventListener('message', function (e) {
-      var msg = e && e.data;
-      if (typeof msg === 'string' && msg.indexOf(PREFIX) === 0) {
-        try {
-          var payload = JSON.parse(msg.slice(PREFIX.length));
-          if (payload && payload.token) {
-            // Save where Decap/Netlify CMS looks
-            var userObj = { token: payload.token };
-            localStorage.setItem('decap-cms-user', JSON.stringify(userObj));
-            localStorage.setItem('netlify-cms-user', JSON.stringify(userObj)); // belt & suspenders
-            // Reload so CMS boots with the stored token
-            location.replace(location.pathname + location.search + location.hash);
-          }
-        } catch (err) {
-          console.error('OAuth token parse error:', err);
-        }
-      }
-    }, false);
-  })();
-</script>
-
-<!-- 4) Initialize Decap right away -->
-<script>
-  if (window.CMS && CMS.init) {
-    CMS.init({ config: '/admin/config.yml' });
-  } else {
-    console.error('Decap bundle not loaded yet.');
-  }
-</script>
-  <style>html,body{height:100%}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}</style>
 </head>
-<body><noscript>Decap CMS requires JavaScript.</noscript></body>
+<body>
+  <noscript>Decap CMS requires JavaScript.</noscript>
+
+  <!-- Load external scripts only (CSP-safe) -->
+  <script src="/admin/boot.js"></script>
+  <script src="/admin/decap-cms.js"></script>
+  <script src="/admin/init.js"></script>
+</body>
 </html>
