@@ -7,6 +7,8 @@ backend:
 media_folder: "static/uploads"
 public_folder: "/uploads"
 
+publish_mode: editorial_workflow
+
 collections:
   - name: posts
     label: Posts
@@ -19,17 +21,20 @@ collections:
       - { name: excerpt, label: Excerpt }
       - { name: body, label: Body, widget: markdown }
 
+collections:
+  # (keep your existing collections here)
+
   - name: "pages"
     label: "Pages"
     label_singular: "Page"
-    folder: "src/pages"
+    folder: "src/pages"         # <- must match Eleventy's input dir
     create: true
     slug: "{{slug}}"
     format: "markdown"
+    extension: "md"             # <- ensure .md files
     fields:
       - { name: title, label: Title }
-      - { name: slug, label: URL Slug, hint: "Lowercase, hyphens only (e.g., about-us)" }
+      - { name: slug, label: URL Slug, hint: "Lowercase, hyphens only" }
       - { name: excerpt, label: Excerpt, required: false }
       - { name: feature_image, label: Feature Image, widget: image, required: false }
       - { name: body, label: Body, widget: markdown }
-
