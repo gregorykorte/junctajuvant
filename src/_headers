@@ -1,0 +1,23 @@
+/               # HTML (homepage)
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html         # Any other HTML
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/js/*    # All your JS modules
+  Cache-Control: public, max-age=0, must-revalidate
+  Vary: Accept-Encoding
+
+/assets/css/*   # Optional: treat CSS the same during active dev
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/img/*   # Images can be long-lived
+  Cache-Control: public, max-age=31536000, immutable
+  
+/api/news-bundle
+  Cache-Control: public, max-age=0, s-maxage=180, must-revalidate
+
+/admin*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
