@@ -18,3 +18,18 @@ collections:
       - { name: date, label: Published at, widget: datetime }
       - { name: excerpt, label: Excerpt }
       - { name: body, label: Body, widget: markdown }
+
+  - name: "pages"
+    label: "Pages"
+    label_singular: "Page"
+    folder: "src/pages"
+    create: true
+    slug: "{{slug}}"
+    format: "markdown"
+    fields:
+      - { name: title, label: Title }
+      - { name: slug, label: URL Slug, hint: "Lowercase, hyphens only (e.g., about-us)" }
+      - { name: excerpt, label: Excerpt, required: false }
+      - { name: feature_image, label: Feature Image, widget: image, required: false }
+      - { name: body, label: Body, widget: markdown }
+
