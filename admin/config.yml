@@ -10,28 +10,24 @@ public_folder: "/uploads"
 publish_mode: editorial_workflow
 
 collections:
-  - name: posts
-    label: Posts
-    folder: src/posts
+  - name: "posts"
+    label: "Posts"
+    folder: "src/posts"
     create: true
     slug: "{{slug}}"
     fields:
       - { name: title, label: Title }
       - { name: date, label: Published at, widget: datetime }
-      - { name: excerpt, label: Excerpt }
       - { name: body, label: Body, widget: markdown }
-
-collections:
-  # (keep your existing collections here)
 
   - name: "pages"
     label: "Pages"
     label_singular: "Page"
-    folder: "src/pages"         # <- must match Eleventy's input dir
+    folder: "src/pages"
     create: true
     slug: "{{slug}}"
     format: "markdown"
-    extension: "md"             # <- ensure .md files
+    extension: "md"
     fields:
       - { name: title, label: Title }
       - { name: slug, label: URL Slug, hint: "Lowercase, hyphens only" }
