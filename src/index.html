@@ -1,59 +1,63 @@
 ---
 layout: base.hbs
 title: Home
-permalink: /
 siteName: Juncta Juvant
 year: 2025
 ---
 
 <div class="container">
-{{&gt; masthead }}
-<div class="rule"></div>
-<main aria-live="polite" class="layout">
-<!-- Left: News -->
-<section class="box news" id="news-box">
-<h2>Latest Cincinnati News</h2>
-<div class="content">
-<ul class="news-list" id="news-list">
-<li class="muted">Loading headlines…</li>
-</ul>
+  {{> partials/masthead }}
+  <div class="rule"></div>
+
+  <main aria-live="polite" class="layout">
+    <!-- Left: News -->
+    <section class="box news" id="news-box">
+      <h2>Latest Cincinnati News</h2>
+      <div class="content">
+        <ul class="news-list" id="news-list">
+          <li class="muted">Loading headlines…</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Middle: Hero -->
+    <figure aria-label="Feature photo" class="box hero" style="--hero-x:0%; --hero-y:-20%;">
+      <div class="hero-text">
+        <h3 class="hero-headline">
+          <a href="#" id="hero-link" rel="noopener" target="_blank"></a>
+        </h3>
+        <div class="hero-meta source">
+          <span id="hero-source"></span> · <span id="hero-time"></span><span id="hero-byline"></span>
+        </div>
+      </div>
+      <div class="hero-media">
+        <img alt="Roebling Bridge at sunset" src="/assets/img/roebling.jpg" />
+      </div>
+      <figcaption class="hero-desc" id="hero-desc"></figcaption>
+    </figure>
+
+    <!-- Right: Weather + Sports -->
+    <aside class="rail">
+      <section aria-live="polite" class="box" id="weather-box">
+        <h2>Weather</h2>
+        <div class="content">
+          <div class="stat-line">
+            <div class="temp" id="temp">—</div>
+            <div class="wx" id="wx-desc">Fetching current conditions…<br/><small id="wx-extra"></small></div>
+          </div>
+        </div>
+      </section>
+      <section class="box" id="sports-box">
+        <h2>Sports</h2>
+        <div class="content" id="sports-content">
+          <div class="muted">Connecting to scores…</div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  {{> partials/footer }}
 </div>
-</section>
-<!-- Middle: Hero (now a full story card) -->
-<figure aria-label="Feature photo" class="box hero" style="--hero-x:0%; --hero-y:-20%;">
-<div class="hero-text">
-<h3 class="hero-headline">
-<a href="#" id="hero-link" rel="noopener" target="_blank"></a>
-</h3>
-<div class="hero-meta source">
-<span id="hero-source"></span> · <span id="hero-time"></span><span id="hero-byline"></span>
-</div>
-</div>
-<div class="hero-media">
-<img alt="Roebling Bridge at sunset" src="/roebling.jpg"/>
-</div>
-<figcaption class="hero-desc" id="hero-desc"></figcaption>
-</figure>
-<!-- Right: Weather + Sports -->
-<aside class="rail">
-<section aria-live="polite" class="box" id="weather-box">
-<h2>Weather</h2>
-<div class="content">
-<div class="stat-line">
-<div class="temp" id="temp">—</div>
-<div class="wx" id="wx-desc">Fetching current conditions…<br/><small id="wx-extra"></small></div>
-</div>
-</div>
-</section>
-<section class="box" id="sports-box">
-<h2>Sports</h2>
-<div class="content" id="sports-content">
-<div class="muted">Connecting to scores…</div>
-</div>
-</section>
-</aside>
-</main>
-{{&gt; footer }}
-</div>
- Load the modular JS bundle 
-<script src="/assets/js/eleventy.js" type="module"></script>
+
+<!-- JS bundle -->
+<script src="/assets/js/main.js" type="module"></script>
