@@ -1,5 +1,5 @@
 export default {
-  layout: "layouts/base.hbs",
+  layout: "base.hbs",
   eleventyComputed: {
     // Pretty URLs: /<slug>/
     permalink: (data) => `/${data.page.fileSlug}/`,

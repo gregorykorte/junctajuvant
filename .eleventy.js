@@ -1,14 +1,19 @@
-export default function (cfg) {
-  // Keep Sveltia CMS admin working by copying /admin into the build output
-  cfg.addPassthroughCopy({ "admin": "admin" });
+// .eleventy.js
+import handlebars from "handlebars";
 
-  // Note: Cloudflare Pages Functions should *not* be copied —
-  // they must live at the repo root in /functions (Pages picks them up directly).
+export default function(eleventyConfig) {
+  // Ensure Eleventy knows how to render .hbs
+  eleventyConfig.setLibrary("hbs", handlebars);
+
   return {
+    htmlTemplateEngine: "hbs",
+    markdownTemplateEngine: "hbs",
+    templateFormats: ["html", "md", "hbs"],
     dir: {
-      input: "src",         // your source directory
-      includes: "_includes",
-      output: "_site"       // build output
-    }
+      input: "src",                  // ./src
+      includes: "_includes",         // ./src/_includes
+      layouts: "_includes/layouts",  // ./src/_includes/layouts
+      output: "_site",
+    },
   };
 }
