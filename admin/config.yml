@@ -12,6 +12,7 @@ publish_mode: editorial_workflow
 collections:
   - name: "posts"
     label: "Posts"
+    label_singular: "Post"
     folder: "src/posts"
     create: true
     slug: "{{slug}}"
