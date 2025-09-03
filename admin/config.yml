@@ -27,7 +27,7 @@ collections:
     folder: "src/pages"
     create: true
     slug: "{{slug}}"
-    format: "markdown"
+    format: "frontmatter"
     extension: "md"
     fields:
       - { name: title, label: Title }
