@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    {{> partials/masthead }}
+    {% include "partials/masthead.njk" %}
 
-    {{{ content }}}
+    {{ content | safe }}
 
-    {{> partials/footer }}
+    {% include "partials/footer.njk" %}
   </body>
 </html>
