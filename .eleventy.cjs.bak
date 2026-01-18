@@ -1,0 +1,12 @@
+const handlebars = require("handlebars");
+
+export default function(eleventyConfig) {
+  // Copy all static assets to the site root
+  eleventyConfig.addPassthroughCopy({ "src/static": "/" });
+
+  return {
+    dir: { input: "src", output: "_site", includes: "_includes", layouts: "_layouts" },
+    // keep your existing handlebars config here
+  };
+}
+

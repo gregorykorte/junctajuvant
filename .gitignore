@@ -1,15 +1,9 @@
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-store/
-
-# Eleventy
+.DS_Store
 _site/
+node_modules/
 .cache/
-**/.DS_Store
-
-# Env/OS
-.env
-*.log
+.DS_Store
+.DS_Store
+.DS_Store
+node_modules/
+_site/

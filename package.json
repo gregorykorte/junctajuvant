@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npx @11ty/eleventy --serve",
-    "build": "npx @11ty/eleventy"
+    "build": "eleventy --input=src --output=_site",
+    "dev": "eleventy --serve --input=src --output=_site"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2",

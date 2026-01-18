@@ -1,27 +1,28 @@
+
+// .eleventy.js (ESM)
+import EleventyHandlebars from "@11ty/eleventy-plugin-handlebars";
 import handlebars from "handlebars";
-import handlebarsPlugin from "@11ty/eleventy-plugin-handlebars";
 
-export default function(eleventyConfig) {
-  // Register official Handlebars plugin (required in Eleventy v3)
-  eleventyConfig.addPlugin(handlebarsPlugin, {
-    eleventyLibraryOverride: handlebars,
-  });
+export default function (eleventyConfig) {
+  // Handlebars templating
+  eleventyConfig.addPlugin(EleventyHandlebars, { handlebars });
 
-  // Copy any static assets as-is (adjust as you add files)
-  eleventyConfig.addPassthroughCopy({ "src/static/assets": "assets" });
-  eleventyConfig.addPassthroughCopy({ "src/static/robots.txt": "robots.txt" });
-  eleventyConfig.addPassthroughCopy({ "src/static/site.webmanifest": "site.webmanifest" });
-  // add more passthroughs as you restore assets
+  // Static assets passthrough: src/static/* → /
+  eleventyConfig.addPassthroughCopy({ "src/static": "/" });
+
+  // (Optional) Watch static for changes during dev
+  eleventyConfig.addWatchTarget("src/static");
 
   return {
-    htmlTemplateEngine: "hbs",
-    markdownTemplateEngine: "hbs",
-    templateFormats: ["html","md","hbs"],
     dir: {
       input: "src",
-      includes: "_includes",     // partials live here
-      layouts: "_layouts",       // layouts live here (so layout: base.hbs works)
       output: "_site",
+      includes: "_includes",
+      layouts: "_layouts",
+      data: "_data",
     },
+    // Allow .hbs plus your content types
+    templateFormats: ["md", "html", "hbs", "njk"],
   };
 }
+
