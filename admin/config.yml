@@ -2,8 +2,10 @@ backend:
   name: github
   repo: gregorykorte/junctajuvant
   branch: main
-  base_url: https://junctajuvant.pages.dev/api/auth
-  auth_endpoint: auth
+  auth_endpoint: /api/auth/auth
+
+site_url: https://junctajuvant.pages.dev
+display_url: https://junctajuvant.pages.dev
 
 media_folder: "src/static/uploads"
 public_folder: "/uploads"
