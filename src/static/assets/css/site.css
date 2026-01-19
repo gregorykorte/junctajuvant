@@ -25,3 +25,35 @@ body{
   padding-left: var(--page-pad);
   padding-right: var(--page-pad);
 }
+
+/* Footer */
+
+.site-footer{
+  margin-top: 48px;
+  padding-top: 16px;
+  padding-bottom: 24px;
+  border-top: 1px solid #ccc;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+.footer-inner{
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding-left: var(--page-pad);
+  padding-right: var(--page-pad);
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.site-footer a{
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted #999;
+}
+
+.site-footer a:hover{
+  border-bottom-style: solid;
+}
+
