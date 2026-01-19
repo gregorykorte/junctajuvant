@@ -56,4 +56,28 @@ body{
 .site-footer a:hover{
   border-bottom-style: solid;
 }
+/* Static pages */
+
+.page{
+  margin-top: 32px;
+  margin-bottom: 48px;
+}
+
+.page-inner{
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding-left: var(--page-pad);
+  padding-right: var(--page-pad);
+}
+
+.page h1{
+  font-family: "Source Serif 4", serif;
+  font-size: 2rem;
+  margin-bottom: 0.75em;
+}
+
+.page p{
+  line-height: 1.6;
+  max-width: 70ch;
+}
 
