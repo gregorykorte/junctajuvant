@@ -159,7 +159,16 @@
 </head>
 <body>
 {{> partials/masthead }}
-{{{'content'}}}
+<div class="date-ribbon" role="note" aria-label="Dateline">
+  <div class="date-ribbon-inner">
+    <span id="ribbon-date">Cincinnati, Ohio —</span>
+  </div>
+</div>
+<main class="main">
+  <div class="page-inner">
+    {{{ content }}}
+  </div>
+</main>
 {{> partials/footer }}
 <script src="/assets/js/main.js" defer></script>
 </body>

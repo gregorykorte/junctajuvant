@@ -58,6 +58,11 @@ body{
 }
 /* Static pages */
 
+.main{
+  margin-top: 24px;
+  margin-bottom: 48px;
+}
+
 .page{
   margin-top: 32px;
   margin-bottom: 48px;
