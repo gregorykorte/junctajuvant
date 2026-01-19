@@ -13,8 +13,8 @@ function fmtDateline(d = new Date()) {
   // Example: "Cincinnati, Ohio — Sat, Jan 17, 2026"
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ,
-    weekday: "short",
-    month: "short",
+    weekday: "long",
+    month: "long",
     day: "numeric",
     year: "numeric",
   }).format(d);

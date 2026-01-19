@@ -80,4 +80,24 @@ body{
   line-height: 1.6;
   max-width: 70ch;
 }
+/* Date ribbon */
+
+.date-ribbon{
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  margin-top: 12px;
+}
+
+.date-ribbon-inner{
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 10px var(--page-pad);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: #333;
+}
+.dateline-spacer{
+  height: 1.1em;
+}
+
 
