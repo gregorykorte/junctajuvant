@@ -3,7 +3,7 @@ title: About
 slug: about
 excerpt: Short blurb about Juncta Juvant.
 feature_image: null
-layout: base.hbs
+layout: page.hbs
 ---
 # About
 
