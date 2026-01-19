@@ -1,0 +1,27 @@
+/* Juncta Juvant — site defaults */
+
+:root{
+  --page-pad: 18px;
+  --page-max: 1100px;
+}
+
+/* Match the body background/colors you already have, only add spacing */
+body{
+  margin: 0;
+}
+
+/* Constrain the header to the same width as the page content */
+.masthead{
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding-left: var(--page-pad);
+  padding-right: var(--page-pad);
+}
+
+/* Your homepage already uses .container — give it real side padding */
+.container{
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding-left: var(--page-pad);
+  padding-right: var(--page-pad);
+}
