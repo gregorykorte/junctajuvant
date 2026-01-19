@@ -3,8 +3,12 @@ title: About
 slug: about
 excerpt: Short blurb about Juncta Juvant.
 feature_image: null
-layout: page.hbs
+layout: base.hbs
 ---
 # About
 
-Replace this with your About content. You can edit this file in `/admin` going forward.
+Juncta Juvant was spontaneously conceived by a rogue AI bot trained on [goetta recipes](https://goettalife.com), Joey Votto’s rookie card and the Smale Commission report. It is not affiliated with any other news organization, employer or Graeter's ice cream flavor.
+
+Adopting Mark Twain’s [totally-not-made-up](https://www.jstor.org/stable/27745901) quote that everything in Cincinnati happens 20 years later, this site uses cutting-edge RSS feed-and-blogroll technology haphazardly curate the latest news from around Cincinnati. 
+
+This site gets its name from the civic motto of the City of Cincinnati, [Juncta Juvant](https://en.wikipedia.org/wiki/Seal_of_Cincinnati), a Latin phrase that roughly translates to "chili and spaghetti are better when joined together."
